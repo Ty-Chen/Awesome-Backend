@@ -22,8 +22,87 @@
 
 链表
 ------
-* ####
+* #### 手写代码，实现一个双向循环链表的增删查操作？
   答：
+```
+  struct list_head
+  {
+  	struct list_head *next, *prev;
+  };
+
+  /**
+   * 添加链表表项
+   * insert a new entry between two known consecutive entries.
+   *
+   * This is only for internal list manipulation where we konw
+   * the prev/next entries already
+   */
+  static inline void __list_add(struct list_head *new,
+  			     struct list_head *prev,
+  			     struct list_head *next)
+  {
+  	next->prev = new;
+  	new->next = next;
+  	new->prev = prev;
+  	prev->next = new;
+  }
+
+  /**
+   * 添加新的链表项
+   * list_add    -     add a new entry
+   * @new: new entry to be added
+   * @head: list head to add it after
+   *
+   * Insert a new entry after the specified head.
+   * This is good for implenting stacks.
+   */
+  static inline void list_add(struct list_head *new, struct list_head *head)
+  {
+  	__list_add(new, head, head->next);
+  }
+
+  /**
+   * 在尾部添加新链表项
+   * list_add_tail    -     add a new entry
+   * @new: new entry to be added
+   * @head: list head to add it before
+   *
+   * Insert a new entry before the specified head.
+   * This is good for implenting queue.
+   */
+  static inline void list_add_tail(struct list_head *new, struct list_head *head)
+  {
+  	__list_add(new, head->prev, head);
+  }
+
+  /*
+   * Delete a list entry by making the prev/next entries
+   * point to each other
+   *
+   * This is only for internal list manipulation where we know
+   * the prev/next entries already!
+   */
+   static inline void __list_del(struct list_head *prev, struct list_head *next)
+   {
+   	next->prev = prev;
+  	prev->next = next;
+   }
+
+  /**
+   * list_del    -    delete entry from list
+   * @entry: the element to delete from the list
+   * Note: list_empty on entry does not return true after this, the entry is
+   * in an undefined state.
+   */
+  static inline void list_del(struct list_head *entry)
+  {
+  	__list_del(entry->prev, entry->next);
+  	entry->next = LIST_POSITION1;
+  	entry->prev = LIST_POSITION2;
+  }
+
+```
+
 -----
 
 * ####
@@ -247,11 +326,145 @@
 
   ------
 
-  * #### 有千万个string在内存怎么高速查找，插入和删除？
-    答：对千万个string做hash，可以实现高速查找，找到了，插入和删除就很方便了。
-  -----
+* #### 有千万个string在内存怎么高速查找，插入和删除？
+  答：对千万个string做hash，可以实现高速查找，找到了，插入和删除就很方便了。
+-----
 
 
-  * ####
-    答：
-  -----
+* #### 找出1-10w中没有出现的两个数字
+  答：方法1：
+  设这些数保存在数组A中，用一个10w的数组B标志某一个数是否出现，i出现则B[i]=1,没出现则B[i]=0；扫描数组B，查找缺失的两个数。
+  时间复杂度：O(N)
+  空间复杂度：O(N)
+
+  方法2：
+  设确实的两个数为X和Y，则我们可以通过累加1到10W的和减去数组A的和，得到X+Y的值S1：
+  X+Y = S1
+  同理，我们可以得到1到10W的平方和 减去 数组A中每个数的平方和，从而得到X^2 + Y^2的值：
+  X^2 + Y^2 = S2
+  根据两个方程可以解出X和Y。
+  这里需要注意的是，计算平方和的时候有可能会越界，可以使用unsigned long long，或者一边加(1到10W的平方和)一边减(数组A中每个数)。
+-----
+
+
+* #### 判断数字是否出现在40亿个数中？给40亿个不重复的unsignedint的整数，没排过序的，然后再给几个数，如何快速判断这几个数是否在那40亿个数当中？
+  答：unsigned int 的取值范围是0到232-1。我们可以申请连续的232/8=512M的内存，用每一个bit对应一个unsigned int数字。首先将512M内存都初始化为0，然后每处理一个数字就将其对应的bit设置为1。当需要查询时，直接找到对应bit，看其值是0还是1即可。
+
+  将这40亿个数分成两类: 最高位为0、最高位为1
+  并将这两类分别写入到两个文件中，其中一个文件中数的个数<=20亿，而另一个>=20亿（这相当于折半了）；与要查找的数的最高位比较并接着进入相应的文件再查找。
+  再然后把这个文件为又分成两类: 次最高位为0、次最高位为1
+  并将这两类分别写入到两个文件中，其中一个文件中数的个数<=10亿，而另一个>=10亿（这相当于折半了）；> 与要查找的数的次最高位比较并接着进入相应的文件再查找
+  …
+  以此类推，就可以找到了,而且时间复杂度为O(logn)
+-----
+
+* #### 在一个文件中有10G个整数，乱序排列，要求找出中位数。内存限制为2G
+  答：假设整数用32bit来表示。
+  第一步：要表示10G个整数，最少需要一个64位的数据空间。（10G = 5 * 2^31 > 2^32 )
+  第二步：分区间
+  2G的内存，能够表示多少个64bit，就能分多少个区间。（一个区间 就表示 一个64bit的数据空间）
+  区间数位：2G / 64bit = 256M 个区间。
+  第三步：求区间表示范围
+  32bit的整数最大值为232-1,所以区间的范围是232 / 256M = 16.
+  即0 ~ 15 ，16 ~ 31，32 ~ 47，…（总共256M个)
+  此时我们有 256M个区间，大小总共为256M * 64bit = 2G内存。
+  第四步：遍历10G个整数。每读取一个整数就将此整数对应的区间+1。
+  第五步：找出中位数所在的区间
+  统计每个区间中整数的值。然后从第一个区间的整数值开始累加。当累加到5G时，停止。此时的区间便包含中位数。记下此区间所表示的范围，设为[a,a+15].并且记下此区间之前所有区间的累加和，设为m。释放掉除包含中位数区间的其他所有区间的内存。
+  第六步：再次遍历10G个整数，统计出现在区间[a,a+15]中每个值的计数，有16个数值，按照a到a+15排序。设为n0,n1,n2,…n15
+  第七步：当m+n0+n1+…+nx首次大于5G时，此时的 a+x 就是所求的中位数。
+
+-----
+
+* #### 统计论坛在线人数分布。求一个论坛的在线人数，假设有一个论坛，其注册ID有两亿个，每个ID从登陆到退出会向一个日志文件中记下登陆时间和退出时间，要求写一个算法统计一天中论坛的用户在线分布，取样粒度为秒。
+  答：一天总共有 3600*24 = 86400秒。
+  定义一个长度为86400的整数数组int delta[86400]，每个整数对应这一秒的人数变化值，可能为正也可能为负。开始时将数组元素都初始化为0。
+  然后依次读入每个用户的登录时间和退出时间，将与登录时间对应的整数值加1，将与退出时间对应的整数值减1。
+  这样处理一遍后数组中存储了每秒中的人数变化情况。
+  定义另外一个长度为86400的整数数组int online_num[86400]，每个整数对应这一秒的论坛在线人数。
+  假设一天开始时论坛在线人数为0，则第1秒的人数online_num[0] = delta[0]。第n+1秒的人数online_num[n] = online_num[n-1] + delta[n]。
+  这样我们就获得了一天中任意时间的在线人数。
+  另外，如果只知道IP，为了方便查找，可以采用哈希表进行记录，较数组更为方便。
+
+-----
+
+* #### 需要多少只小白鼠才能在24小时内找到毒药有1000瓶水，其中有一瓶有毒，小白鼠只要尝一点带毒的水24小时后就会死亡，至少要多少只小白鼠才能在24小时时鉴别出那瓶水有毒？
+    答：每个老鼠只有死或活2种状态，因此每个老鼠可以看作一个bit，取0或1
+  N个老鼠可以看作N个bit，可以表达2^N种状态（其中第i个状态代表第i个瓶子有毒）
+  例如：当N＝2时，可以表达4种状态
+  0，0（ 一号老鼠活，二号老鼠活）
+  0，1（ 一号老鼠活，二号老鼠死）
+  1，0（ 一号老鼠死，二号老鼠活）
+  1，1（ 一号老鼠死，二号老鼠死）
+  具体来说，有A、B、C、D这4个瓶子，一号老鼠喝A和B， 二号老鼠喝B和C
+  如果 0，0 （ 一号老鼠活，二号老鼠活），说明是D有毒，第0个状态代表第4个瓶子有毒
+  如果 0，1 （ 一号老鼠活，二号老鼠死） ，说明是C有毒 ，第1个状态代表第3个瓶子有毒
+  如果 1，0 （ 一号老鼠死，二号老鼠活） ，说明是A有毒 ，第2个状态代表第1个瓶子有毒
+  如果 1，1 （ 一号老鼠死，二号老鼠死） ，说明是B有毒 ，第3个状态代表第2个瓶子有毒
+
+-----
+
+* ####
+  答：
+
+-----
+
+* ####
+  答：
+
+-----
+
+* ####
+  答：
+
+
+
+子串问题
+------
+
+* #### 求最大子串和，说思路。
+  答：最大子串和，即求一个数列中和最大的子列，采用动态规划可以有最优算法，时间复杂度为O（N）。因为最大连续子序列和只可能是以位置0～n-1中某个位置结尾。当遍历到第i个元素时，判断在它前面的连续子序列和是否大于0，如果大于0，则以位置i结尾的最大连续子序列和为元素i和前门的连续子序列和相加；否则，则以位置i结尾的最大连续子序列和为元素i。
+
+```cpp
+int maxsequence3(int a[], int len)  
+{  
+    int maxsum, maxhere;  
+    maxsum = maxhere = a[0];   //初始化最大和为a【0】  
+    for (int i=1; i<len; i++) {  
+        if (maxhere <= 0)  
+            maxhere = a[i];  //如果前面位置最大连续子序列和小于等于0，则以当前位置i结尾的最大连续子序列和为a[i]  
+        else  
+            maxhere += a[i]; //如果前面位置最大连续子序列和大于0，则以当前位置i结尾的最大连续子序列和为它们两者之和  
+        if (maxhere > maxsum) {  
+            maxsum = maxhere;  //更新最大连续子序列和  
+        }  
+    }  
+    return maxsum;  
+}
+```  
+-----
+* ####
+  答：
+-----
+* ####
+  答：
+-----
+* ####
+  答：
+
+  越界问题
+-----
+* #### 两个数相乘，小数点后位数没有限制，请写一个高精度算法。
+  答：算法提示：
+输入 string a, string b； 计算string c=ab; 返回 c;
+1，纪录小数点在a,b中的位置l1,l2，则需要小数点后移动位置数为l=length(a)+length(b)-l1-l2-2;
+2, 去掉a,b中的小数点，（a,b小数点后移，使a,b变为整数）
+3, 计算c=ab; （同整数的大数相乘算法）
+4，输出c,（注意在输出倒数第l个数时，输出一个小数点。若是输出的数少于l个，就补0）
+-----
+* ####
+  答：
+-----
+* ####
+  答：
+-----
