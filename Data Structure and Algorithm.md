@@ -24,7 +24,8 @@
 ------
 * #### 手写代码，实现一个双向循环链表的增删查操作？
   答：
-```
+
+```cpp
   struct list_head
   {
   	struct list_head *next, *prev;
