@@ -8,4 +8,4 @@
 
 * ## [Redis面试攻略](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Database%20Redis.md)
 
-* ## ZooKeeper & Elasticsearch & Kafka面试攻略
+* ## [ZooKeeper & Elasticsearch & Kafka面试攻略](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Database%20Others.md)
