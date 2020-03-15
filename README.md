@@ -7,7 +7,7 @@
 * ## [GO](https://github.com/Ty-Chen/Awesome-Backend/blob/master/GO.md "go")
 * ## [shell](https://github.com/Ty-Chen/Awesome-Backend/blob/master/shell.md "shell")
 * ## [分布式系统](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Distribute%20System.md "Distribute System")
-* ++ [数据库](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Database.md)
+* ## [数据库](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Database.md)
 * ## [计算机系统](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Computer%20System.md "Computer System")
 * ## [设计模式](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Design%20Pattern.md "Design Pattern")
 * ## [数据结构和算法](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Data%20Structure%20and%20Algorithm.md "Data Structure and Algorithm")
