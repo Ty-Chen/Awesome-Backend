@@ -11,7 +11,7 @@ C和C++面试攻略
 * #### 模板类的偏特化？
   ​	模板分为类模板与函数模板，特化分为全特化与偏特化。全特化就是限定死模板实现的具体类型，偏特化就是如果这个模板有多个类型，那么只限定其中的一部分。对于函数模板，却只有全特化，不能偏特化。
 
-  ---
+---
 
 * #### volatile的含义
 ​	变量可能在编译器的控制或监控之外改变，告诉编译器不要优化该变量，如被系统时钟更新的变量。
@@ -39,12 +39,78 @@ C和C++面试攻略
   ```
 -----
 
-* #### 初始化序列和构造函数谁先执行
-  答：
+* ### C++类中数据成员初始化顺序？
+
+  1. 成员变量在使用初始化列表初始化时，与构造函数中初始化成员列表的顺序无关，只与定义成员变量的顺序有关。
+
+  2. 如果不使用初始化列表初始化，在构造函数内初始化时，此时与成员变量在构造函数中的位置有关。
+
+  3. 类中const成员常量必须在构造函数初始化列表中初始化。
+
+  4. 类中static成员变量，只能在类内外初始化(同一类的所有实例共享静态成员变量)。
+
+  初始化顺序：
+
+  * 1） 基类的静态变量或全局变量
+  * 2） 派生类的静态变量或全局变量
+  * 3） 基类的成员变量
+  * 4） 派生类的成员变量
 
 -----
 * #### gdb调试进程
-  答：
+
+
+
+---
+* #### static_cast, dynamic_cast, const_cast, reinpreter_cast的区别？ 
+
+  [see here](https://www.cnblogs.com/chio/archive/2007/07/18/822389.html)
+
+---
+
+* #### 深拷贝与浅拷贝
+
+  1. 什么时候用到拷贝函数？
+
+      - 一个对象以值传递的方式传入函数体； 
+
+      - 一个对象以值传递的方式从函数返回；
+
+      - 一个对象需要通过另外一个对象进行初始化。
+
+     如果在类中没有显式地声明一个拷贝构造函数，那么，编译器将会自动生成一个默认的拷贝构造函数，该构造函数完成对象之间的位拷贝。位拷贝又称浅拷贝；
+
+  2. 是否应该自定义拷贝函数？
+
+      自定义拷贝构造函数是一种良好的编程风格，它可以阻止编译器形成默认的拷贝构造函数，提高源码效率。
+
+  3. 什么叫深拷贝？什么是浅拷贝？两者异同？
+
+       如果一个类拥有资源，当这个类的对象发生复制过程的时候，资源重新分配，这个过程就是深拷贝，反之，没有重新分配资源，就是浅拷贝。
+
+  4. 深拷贝好还是浅拷贝好？
+
+     如果实行位拷贝，也就是把对象里的值完全复制给另一个对象，如A=B。这时，如果B中有一个成员变量指针已经申请了内存，那A中的那个成员变量也指向同一块内存。这就出现了问题：当B把内存释放了（如：析构），这时A内的指针就是野指针了，出现运行错误。
+
+---
+
+* #### const与#define的区别
+
+  1. 编译器处理方式 
+     define – 在预处理阶段进行替换 
+     const – 在编译时确定其值
+  
+  2. 类型检查 
+     define – 无类型，不进行类型安全检查，可能会产生意想不到的错误 
+     const – 有数据类型，编译时会进行类型检查
+  
+  3. 内存空间 
+     define – 不分配内存，给出的是立即数，有多少次使用就进行多少次替换，在内存中会有多个拷贝，消耗内存大 
+     const – 在静态存储区中分配空间，在程序运行过程中内存中只有一个拷贝
+  
+  4. 其他 
+     在编译时， 编译器通常不为const常量分配存储空间，而是将它们保存在符号表中，这使得它成为一个编译期间的常量，没有了存储与读内存的操作，使得它的效率也很高。 
+     宏替换只作替换，不做计算，不做表达式求解。
 
 ------
 * #### 写一个c程序辨别系统是大端or小端字节序。
@@ -158,12 +224,12 @@ C和C++面试攻略
   - 静态成员函数不能访问非静态函数或者变量。static函数中不能使用this关键字，不能声明为virtual虚函数。
   
   ```cpp
-const int y = 10;  // const常量
-  
-  int x = 30;
-  const int* p1 = &x;  // 指向常量的指针，指针可以指向其他常量，但不能通过指针修改数据
-  int* const p2 = &x;  // 指向变量的常量指针，指针不可以指向其他常量，但能通过指针修改数据
-  const int* const p3 = &x;  // 指向常量的常量指针。
+    const int y = 10;  // const常量
+
+    int x = 30;
+    const int* p1 = &x;  // 指向常量的指针，指针可以指向其他常量，但不能通过指针修改数据
+    int* const p2 = &x;  // 指向变量的常量指针，指针不可以指向其他常量，但能通过指针修改数据
+    const int* const p3 = &x;  // 指向常量的常量指针。
   ```
     ```cpp
      //类中的const：  
@@ -183,7 +249,7 @@ const int y = 10;  // const常量
       }；
   
       int C::c = 10;  // 静态变量的初始化
-  ```
+    ```
   - 第一个const修饰函数返回值，返回一个const值，不能被修改；
   
   - 第二个const修饰函数参数，函数中不能修改该参数，可以接收const或者非const的形参；
@@ -275,6 +341,7 @@ const int y = 10;  // const常量
 -----
 * #### 如何在main函数之前执行函数？
    在gcc中，可以使用attribute关键字，声明constructor和destructor，代码如下：
+   
     ```cpp
    #include <stdio.h>  
 
@@ -294,7 +361,9 @@ const int y = 10;  // const常量
         return 0;  
     }  
     ```
+   
     vc不支持attribute关键字，在vc中，可以使用如下方法：
+   
   ```cpp
   #include <stdio.h>  
 
@@ -304,68 +373,71 @@ const int y = 10;  // const常量
 
         return 0;  
   }  
-  ```
-
-
+  
   int before_main()  
   {  
-        printf("%s/n",__FUNCTION__);  
-
-        return 0;  
+      printf("%s/n",__FUNCTION__);  
+      return 0;  
   }  
+  
+    int after_main()  
+    {  
+          printf("%s/n",__FUNCTION__);  
+  
+          return 0;  
+  
+    }  
+  
+    typedef int func();  
+  
+    #pragma data_seg(".CRT$XIU")  
+    static func * before[] = { before_main };  
+  
+    #pragma data_seg(".CRT$XPU")  
+    static func * after[] = { after_main };  
+  
+    #pragma data_seg()  
+  ```
 
-  int after_main()  
-  {  
-        printf("%s/n",__FUNCTION__);  
+ 
 
-        return 0;  
-  }  
 
-  typedef int func();  
 
-  #pragma data_seg(".CRT$XIU")  
-  static func * before[] = { before_main };  
-
-  #pragma data_seg(".CRT$XPU")  
-  static func * after[] = { after_main };  
-
-  #pragma data_seg()  
-  ```  
 
   在C++中，还可以用全局对象构造函数
 
-  ```cpp
-  #include <iostream>
-  #include <string>
-
-  using namespace std;
-
-  class A {
-  public:
-      A(string s) {
-          str.assign(s);
-          cout << str << ":A构造" <<endl;
+      ```cpp
+      #include <iostream>
+      #include <string>
+    
+      using namespace std;
+    
+      class A {
+      public:
+          A(string s) {
+              str.assign(s);
+              cout << str << ":A构造" <<endl;
+          }
+          ~A(){
+              cout << str << ":A析构" <<endl;
+          }
+      private:
+          string str;
+      };
+    
+      A test1("Global"); // 全局对象的构造
+    
+      int main() {
+          A test2("main");  // 局部对象的构造
+          return 0;
       }
-      ~A(){
-          cout << str << ":A析构" <<endl;
-      }
-  private:
-      string str;
-  };
-
-  A test1("Global"); // 全局对象的构造
-
-  int main() {
-      A test2("main");  // 局部对象的构造
-      return 0;
-  }
-
-  // 输出结果
-  // Global:A构造
-  // main:A构造
-  // main:A析构
-  // Global:A析构
-  ```
+    
+      // 输出结果
+      // Global:A构造
+      // main:A构造
+      // main:A析构
+      // Global:A析构
+      ```
 
   编译执行，上述两段代码的结果均为：
 
@@ -381,105 +453,106 @@ const int y = 10;  // const常量
 
 -----
 
-* #### 如果是自己为一个类写一个sizeof函数，应该考虑哪些问题？
-  答：  
-  ```cpp
+* #### 如果是自己为一个类写一个sizeof函数，应该考虑哪些问题？ 
+```cpp
   #pragma pack(1)
-
-  class Empty{
+  
+class Empty{
   };   // 1
-
-  class A {
+  
+class A {
   public:
       A() {a = 3;}
       int a;
       virtual int funa(){}
   };
-
-  class A1 {
+  
+class A1 {
       int a1;
       virtual int funa(){}
   };
-
-  class A2 {
+  
+class A2 {
       int a2;
       virtual int funa();
   };
-
-  class Derive1: public A, public A1, public A2 {
+  
+class Derive1: public A, public A1, public A2 {
       virtual int derive();
   };    // 36
-
-  class Derive2: public A, public A1, public A2 {
+  
+class Derive2: public A, public A1, public A2 {
       int der;
       virtual int derive();
   };    // 40
-
-  class B {
+  
+class B {
       int b;
   };   // 4
-
-  class C : public B {
+  
+class C : public B {
       int c;
       virtual int func();
   };   // 16
-  ```
+  
+    class D : public A {
+        int d;
+        virtual int fund();
+    };   // 16
+  
+    class E : virtual public A {
+    public:
+        E() {e = 4;}
+        int  e;
+        virtual int fune() {}
+    };   // 24
+  
+    class F : virtual public A, virtual public A1, virtual public B {
+        int f;
+        virtual int funf(){}
+    };   // 40
+  
+    class G : virtual public A, virtual public A1, virtual public A2 {
+        virtual int fung(){}
+    };   // 44
+  
+  
+    class H : virtual public B {
+        int h;
+        virtual int funh();
+    };    // 16
+  
+    class J {
+        //int j;  // 若增加该语句，sizeof(I) 为24
+        virtual int funj();
+    };    //8
+  
+    class I : virtual public J {
+        int i;
+        virtual int funi();
+    };   // 12
+```
 
+1. 空类：1
 
-  class D : public A {
-      int d;
-      virtual int fund();
-  };   // 16
+2. 非虚继承
 
-  class E : virtual public A {
-  public:
-      E() {e = 4;}
-      int  e;
-      virtual int fune() {}
-  };   // 24
+- 父类A无虚函数，子类B有虚函数：sizeof(B) = A数据 + B数据 + sizeof(vptr)
+- 父类A有虚函数，子类B有虚函数: sizeof(B) = A数据 + B数据 + sizeof(vptr)
 
-  class F : virtual public A, virtual public A1, virtual public B {
-      int f;
-      virtual int funf(){}
-  };   // 40
+-  父类A、B、C均有虚函数，子类D有虚函数: sizeof(D) = A数据 + B数据 + C数据 + D数据 + 3*sizeof(vptr) （D的虚函数增加在继承的第一个类A的虚函数表里）
 
-  class G : virtual public A, virtual public A1, virtual public A2 {
-      virtual int fung(){}
-  };   // 44
+3. 虚继承
 
+- 父类A无虚函数，子类B有虚函数：sizeof(B) = A数据 + B数据 + sizeof(vptr)
 
-  class H : virtual public B {
-      int h;
-      virtual int funh();
-  };    // 16
-
-  class J {
-      //int j;  // 若增加该语句，sizeof(I) 为24
-      virtual int funj();
-  };    //8
-
-  class I : virtual public J {
-      int i;
-      virtual int funi();
-  };   // 12
-  ```
-  a.空类：1
-  b.非虚继承
-
-  父类A无虚函数，子类B有虚函数：sizeof(B) = A数据 + B数据 + sizeof(vptr)
-  父类A有虚函数，子类B有虚函数: sizeof(B) = A数据 + B数据 + sizeof(vptr)
-  父类A、B、C均有虚函数，子类D有虚函数: sizeof(D) = A数据 + B数据 + C数据 + D数据 + 3*sizeof(vptr) （D的虚函数增加在继承的第一个类A的虚函数表里）
-  c.虚继承
-
-  父类A无虚函数，子类B有虚函数：sizeof(B) = A数据 + B数据 + sizeof(vptr)
-  父类A有虚函数，子类B有虚函数: sizeof(B) = A数据 + B数据 + 2*sizeof(vptr)
-  父类A、B、C均有虚函数，子类D有虚函数: sizeof(D) = A数据 + B数据 + C数据 + D数据 + 4*sizeof(vptr)
-  父类A有虚函数，但无数据，子类B有虚函数：sizeof(B) = B数据 + sizeof(vptr)
+- 父类A有虚函数，子类B有虚函数: sizeof(B) = A数据 + B数据 + 2*sizeof(vptr)
+- 父类A、B、C均有虚函数，子类D有虚函数: sizeof(D) = A数据 + B数据 + C数据 + D数据 + 4*sizeof(vptr)
+- 父类A有虚函数，但无数据，子类B有虚函数：sizeof(B) = B数据 + sizeof(vptr)
 
 -----
 
 * #### 写string类的构造，析构，拷贝函数。
-  答：
    ``` cpp
   class String {
   public:
@@ -539,7 +612,6 @@ const int y = 10;  // const常量
 -----
 
 * #### 宏定义和展开
-  答：
   ```cpp
   #include <stdio.h>
   #define f(a,b) a##b
@@ -552,102 +624,139 @@ const int y = 10;  // const常量
     return 0;
   }
   ```
+  
 
-  \# 将右边的参数做整体的字符串替换。
-  对于#的参数，即便是另一个宏，也不展开，仍然作为字符串字面信息输出。所以，g(f(1,2)) 为 f(1,2)。
+\# : 将右边的参数做整体的字符串替换。
+  	对于#的参数，即便是另一个宏，也不展开，仍然作为字符串字面信息输出。所以，g(f(1,2)) 为 f(1,2)。
 
-  对于h(f(1,2))，由于h(a)是非#或##的普通宏，需要先宏展开其参数a，即展开f(1,2)为12，则h(a) 宏替换为h(12)，进而宏替换为g(12), 进而宏替换为12
+​	对于h(f(1,2))，由于h(a)是非#或##的普通宏，需要先宏展开其参数a，即展开f(1,2)为12，则h(a) 宏替换为h(12)，进而宏替换为g(12), 进而宏替换为12
 
-  \## 将左右两边的参数做整体的字符串拼接替换，则f(1,2)为12。
-  同#，对于##的参数，即便是另一个宏，也不展开，仍然作为字符串字面信息输出。此外，有一个限制是，经过##替换后的内容必须能够作为一个合法的变量。
+\## : 将左右两边的参数做整体的字符串拼接替换，则f(1,2)为12。
+  	同#，对于##的参数，即便是另一个宏，也不展开，仍然作为字符串字面信息输出。此外，有一个限制是，经过##替换后的内容必须能够作为一个合法的变量。
 
 -----
 
 * #### 哪些库函数属于高危函数，为什么？
-答：标准库中的许多字符串处理和IO流读取函数是导致缓冲区溢出的罪魁祸首。高危函数
-  strcpy() 函数将源字符串复制到缓冲区。没有指定要复制字符的具体数目！如果源字符串碰巧来自用户输入，且没有专门限制其大小，则有可能会造成缓冲区溢出！
-  也可以使用strncpy() 来完成同样的目的。
+​	标准库中的许多字符串处理和IO流读取函数是导致缓冲区溢出的罪魁祸首。
+  
+  - strcpy() 函数将源字符串复制到缓冲区。没有指定要复制字符的具体数目！如果源字符串碰巧来自用户输入，且没有专门限制其大小，则有可能会造成缓冲区溢出！可以使用strncpy() 来完成同样的目的。
 
-  而strcpy_s版本之所以安全，是因为他们在接口增加了一个参数numElems来表明dest中的字节数，防止目标指针dest中的空间不够而导致出现Bug，同时返回值改成返回错误代码，而不是为了一些所谓的方便而返回char*。这样接口的定义就比原来安全很多。
+  - strcpy_s版本之所以安全，是因为他们在接口增加了一个参数numElems来表明dest中的字节数，防止目标指针dest中的空间不够而导致出现Bug，同时返回值改成返回错误代码，而不是为了一些所谓的方便而返回char*。这样接口的定义就比原来安全很多。
 
-  `void * memcpy( void *dst, const void *src, size_t len);`
+  - `void * memcpy( void *dst, const void *src, size_t len);`
 
-  当len超过dst实际内存大小时，存在踩越界；
+    当len超过dst实际内存大小时，存在踩越界；
 
-  `char* strcpy(char* dest,const char* src)`
+  - `char* strcpy(char* dest,const char* src)`
 
-  当src字符串长度超过dest字符串长度，存在踩越界；
+    当src字符串长度超过dest字符串长度，存在踩越界；
 
-  `char * strncpy( void *dst, const void *src, size_t len);`
+  - `char * strncpy( void *dst, const void *src, size_t len);`
 
-  当len超过dst实际内存大小时，存在踩越界；
-  当len小于src实际内存大小时，实际按len大小拷贝到dest中，不会置结束符，可能会存在访问越界风险。
+    当len超过dst实际内存大小时，存在踩越界；
+    当len小于src实际内存大小时，实际按len大小拷贝到dest中，不会置结束符，可能会存在访问越界风险。
 
-  `int sprintf(char * buf, const char *fmt, …）`
+  - `int sprintf(char * buf, const char *fmt, …）`
 
-  当参数fmt变长字符串长度超过buf长度，存在踩越界；
+    当参数fmt变长字符串长度超过buf长度，存在踩越界；
 
-  `char* strcat(char* dest,const char* src)
+  - `char* strcat(char* dest,const char* src)`
 
-  当src字符串长度超过dest剩余长度，存在踩越界；
+    当src字符串长度超过dest剩余长度，存在踩越界；
 
-  `char * strncat(char \*dest, const char \*src, size_t count) `
+  - `char * strncat(char \*dest, const char \*src, size_t count) `
 
-  当count超过dest剩余内存大小时，存在踩越界；
+    当count超过dest剩余内存大小时，存在踩越界；
 
------
+---
 
-* ####
-答：
+* #### 哪些函数不能成为虚函数？
 
------
+  **不能被继承的函数和不能被重写的函数。**
 
-* ####
-答：
+  1. 普通函数
+
+     普通函数不属于成员函数，是不能被继承的。普通函数只能被重载，不能被重写，因此声明为虚函数没有意义。因为编译器会在编译时绑定函数。
+
+     而多态体现在运行时绑定。通常通过基类指针指向子类对象实现多态。
+
+  2. 友元函数
+
+     友元函数不属于类的成员函数，不能被继承。对于没有继承特性的函数没有虚函数的说法。
+
+  3. 构造函数
+
+     首先说下什么是构造函数，构造函数是用来初始化对象的。假如子类可以继承基类构造函数，那么子类对象的构造将使用基类的构造函数，而基类构造函数并不知道子类的有什么成员，显然是不符合语义的。从另外一个角度来讲，多态是通过基类指针指向子类对象来实现多态的，在对象构造之前并没有对象产生，因此无法使用多态特性，这是矛盾的。因此构造函数不允许继承。
+
+  4. 内联成员函数
+
+     我们需要知道内联函数就是为了在代码中直接展开，减少函数调用花费的代价。也就是说内联函数是在编译时展开的。而虚函数是为了实现多态，是在运行时绑定的。因此显然内联函数和多态的特性相违背。
+
+  5. 静态成员函数
+
+     首先静态成员函数理论是可继承的。但是静态成员函数是编译时确定的，无法动态绑定，不支持多态，因此不能被重写，也就不能被声明为虚函数。
+
+---
+
+* #### 程序加载时内存图
+
+![img](E:\doc\Awesome-Backend\1118296-20180731235515567-269130492.png)
+
+​	在多任务操作系统中，每个进程都运行在一个**属于自己的虚拟内存**中，而虚拟内存被分为许多页，并映射到物理内存中，被加载到物理内存中的文件才能够被执行。这里我们主要关注程序被装载后的内存布局，其可执行文件包含了代码段，数据段，BSS段，堆，栈等部分，其分布如上图所示。
+
+- **代码段(.text)：**用来存放可执行文件的机器指令。存放在只读区域，以防止被修改。
+- **只读数据段(.rodata)：**用来存放常量存放在只读区域，如字符串常量、全局const变量等。
+- **可读写数据段(.data)：**用来存放可执行文件中已初始化全局变量，即静态分配的变量和全局变量。
+- **BSS段(.bss)：**未初始化的全局变量和局部静态变量以及初始化为0的全局变量一般放在.bss的段里，以节省内存空间。eg:static int a=0;(初始化为0的全局变量（静态变量）放在.bss)。
+- **堆**：用来容纳应用程序动态分配的内存区域。当程序使用malloc或new分配内存时，得到的内存来自堆。堆通常位于栈的下方。
+- **栈**：用于维护函数调用的上下文。栈通常分配在用户空间的最高地址处分配。
+- **动态链接库映射区**：如果程序调用了动态链接库，则会有这一部分。该区域是用于映射装载的动态链接库。
+- **保留区**：内存中受到保护而禁止访问的内存区域。
+
+---
 
 STL相关问题
 -----
 
 * #### 具体说明STL如何实现vector
-  答：vector的内部是使用动态数组的方式来实现的，如果动态数组的内部实现不够用，就要动态的重新分配内存。然后把原数组的内容拷贝过去。
+  ​	vector的内部是使用动态数组的方式来实现的，如果动态数组的内部实现不够用，就要动态的重新分配内存。然后把原数组的内容拷贝过去。
 
 -----
 
 * #### vector和list的区别
-  答：vector和数组类似，拥有连续的内存空间，支持随机的存取，在中间进行元素的插入和删除的操作时间复杂度是O(n)
-list是由双向链表实现的，只能通过数组指针来进行数据访问，遍历中间的元素，时间的复杂度是O(n).
+  ​	vector和数组类似，拥有连续的内存空间，支持随机的存取，在中间进行元素的插入和删除的操作时间复杂度是O(n)
+​	list是由双向链表实现的，只能通过数组指针来进行数据访问，遍历中间的元素，时间的复杂度是O(n).
 
 -----
 
 * #### 如何选择使用vector或dequeue
-  答：一般情况下使用vector,在需要从首尾两端进行插入或删除操作的时候需要选择dequeue.
+  一般情况下使用vector,在需要从首尾两端进行插入或删除操作的时候需要选择dequeue.
 
 -----
 
 * #### map内部的实现
-  答：map的底层是一棵红黑树，在对节点的插入或是删除操作中，通过旋转来保持平衡性，最坏情况下的插入、删除、查找时间是O(logn)
+  ​	map的底层是一棵红黑树，在对节点的插入或是删除操作中，通过旋转来保持平衡性，最坏情况下的插入、删除、查找时间是O(logn)
+
 map和hashmap的区别
-底层数据结构不同，map是红黑树，hashmap是哈希表
-map元素可以自动按照键值排序，hashmap的各项操作平均时间复杂度接近常数
-map是C++标准的一部而hashmap并不是
-vector中erase方法与algorithn中的remove方法区别
-vector中erase方法真正删除了元素，迭代器不能访问了
-remove只是简单地将元素移到了容器的最后面，迭代器还是可以访问到。因为algorithm通过迭代器进行操作，不知道容器的内部结构，所以无法进行真正的删除。
+
+- 底层数据结构不同，map是红黑树，hashmap是哈希表
+- map元素可以自动按照键值排序，hashmap的各项操作平均时间复杂度接近常数
+- map是C++标准的一部而hashmap并不是（unsorted_map是标准库了）
 
 ------
 
 * #### 为何map和set的插入删除效率比用其他序列容器高？
-  答：
+  
 
 -----
 
 * #### 每次insert之后，以前保存的iterator是否会失效？
-  答：对于vector来说，每一次删除和插入，指针都有可能失效，调用push_back在尾部插入也是如此。因为为了保证内部数据的连续存放，iterator指向的那块内存在删除和插入过程中可能已经被其他内存覆盖或者内存已经被释放了。即使时push_back的时候，容器内部空间可能不够，需要一块新的更大的内存，只有把以前的内存释放，申请新的更大的内存，复制已有的数据元素到新的内存，最后把需要插入的元素放到最后，那么以前的内存指针自然就不可用了。特别时在和find等算法在一起使用的时候，牢记这个原则：不要使用过期的iterator。
+  ​	对于vector来说，每一次删除和插入，指针都有可能失效，调用push_back在尾部插入也是如此。因为为了保证内部数据的连续存放，iterator指向的那块内存在删除和插入过程中可能已经被其他内存覆盖或者内存已经被释放了。即使时push_back的时候，容器内部空间可能不够，需要一块新的更大的内存，只有把以前的内存释放，申请新的更大的内存，复制已有的数据元素到新的内存，最后把需要插入的元素放到最后，那么以前的内存指针自然就不可用了。特别时在和find等算法在一起使用的时候，牢记这个原则：不要使用过期的iterator。
 
 -----
 
 * #### 为何map和set不能像vector一样有个reserve函数来预分配数据？
-  答：在map和set内部存储的已经不是元素本身了，而是包含元素的节点。也就是说map内部使用的Alloc并不是map<Key,Data, Compare, Alloc>声明的时候从参数中传入的Alloc
+  ​	在map和set内部存储的已经不是元素本身了，而是包含元素的节点。也就是说map内部使用的Alloc并不是map<Key,Data, Compare, Alloc>声明的时候从参数中传入的Alloc
 
 -----
 
@@ -662,12 +771,12 @@ remove只是简单地将元素移到了容器的最后面，迭代器还是可�
 
 -----
 * #### 什么时候需要用hash_map，什么时候需要用map?
-  答：在以下场景使用std::map更优：
+  在以下场景使用std::map更优：
   1. 当需要排序数据
   2. 当需要顺序打印、访问数据
   3. 当需要找数据的前后项的时候
-
-
+  
+  
   相反的，在以下场合更适宜使用std::unsorted_map
   1. 不需要数据排序
   2. 需要统计数据或对增删有严格时间要求
@@ -676,62 +785,78 @@ remove只是简单地将元素移到了容器的最后面，迭代器还是可�
 -----
 
 * #### map用[]和find查找有什么区别？
-  答：map的下标运算符[]的作用是：将关键码作为下标去执行查找，并返回对应的值；如果不存在这个关键码，就将一个具有该关键码和值类型的默认值的项插入这个map。
-map的find函数：用关键码执行查找，找到了返回该位置的迭代器；如果不存在这个关键码，就返回尾迭代器。
+  ​	map的下标运算符[]的作用是：将关键码作为下标去执行查找，并返回对应的值；如果不存在这个关键码，就将一个具有该关键码和值类型的默认值的项插入这个map。
+​	map的find函数：用关键码执行查找，找到了返回该位置的迭代器；如果不存在这个关键码，就返回尾迭代器。
 
 -----
 
 * #### map对key的要求？
-  答：1 支持拷贝构造
-2 支持operator=
-3 operator< 如果没有operator<那么 map模板必须增加第三个模板参数
-4 默认的构造函数
+  1. 支持拷贝构造
+2. 支持operator=
+3. operator< 如果没有operator<那么 map模板必须增加第三个模板参数
+4. 默认的构造函数
 
 -----
 
 * #### vector和链表的区别
-    答：  （1）vector为存储的对象分配一块连续的地址空间，随机访问效率很高。但是插入和删除需要移动大量的数据，效率较低。尤其当vector中存储的对象较大，或者构造函数复杂，则在对现有的元素进行拷贝的时候会执行拷贝构造函数。
-  （2）list中的对象是离散的，随机访问需要遍历整个链表，访问效率比vector低。但是在list中插入元素，尤其在首尾插入，效率很高，只需要改变元素的指针。
-  （3）vector是单向的，而list是双向的；
-  （4）vector中的iterator在使用后就释放了，但是链表list不同，它的迭代器在使用后还可以继续用。
+    1. vector为存储的对象分配一块连续的地址空间，随机访问效率很高。但是插入和删除需要移动大量的数据，效率较低。尤其当vector中存储的对象较大，或者构造函数复杂，则在对现有的元素进行拷贝的时候会执行拷贝构造函数。
+  2. list中的对象是离散的，随机访问需要遍历整个链表，访问效率比vector低。但是在list中插入元素，尤其在首尾插入，效率很高，只需要改变元素的指针。
+  3. vector是单向的，而list是双向的；
+  4. vector中的iterator在使用后就释放了，但是链表list不同，它的迭代器在使用后还可以继续用。
 
   使用原则：
-  （1）如果需要高效的随机存取，而不在乎插入和删除的效率，使用vector；
-  （2）如果需要大量高效的删除插入，而不在乎存取时间，则使用list；
-  （3）如果需要高效的随机存取，还要大量的首尾的插入删除则建议使用deque，它是list和vector的折中；
+  
+  - 如果需要高效的随机存取，而不在乎插入和删除的效率，使用vector；
+  - 如果需要大量高效的删除插入，而不在乎存取时间，则使用list；
+  - 如果需要高效的随机存取，还要大量的首尾的插入删除则建议使用deque，它是list和vector的折中；
+
+-----
+* ####  vector中size()和capacity()的区别
+  
+  - size()指容器当前拥有的元素个数（对应的resize(size_type)会在容器尾添加或删除一些元素，来调整容器中实际的内容，使容器达到指定的大小。）；capacity（）指容器在必须分配存储空间之前可以存储的元素总数。
+  
+  - size表示的这个vector里容纳了多少个元素，capacity表示vector能够容纳多少元素，它们的不同是在于vector的size是2倍增长的。如果vector的大小不够了，比如现在的capacity是4，插入到第五个元素的时候，发现不够了，此时会给他重新分配8个空间，把原来的数据及新的数据复制到这个新分配的空间里。（会有迭代器失效的问题）
+
+-----
+* #### vector、map、multimap、unordered_map、unordered_multimap的底层数据结构，以及几种map容器如何选择？
+  **底层数据结构**：
+  
+  - vector基于**数组**，map、multimap基于**红黑树**，unordered_map、unordered_multimap基于**哈希表**。
+  
+  **根据应用场景进行选择：**
+  
+  - map/unordered_map **不允许重复元素**
+  - multimap/unordered_multimap **允许重复元素**
+  - map/multimap **底层基于红黑树，元素自动有序，且插入、删除效率高**
+  - unordered_map/unordered_multimap **底层基于哈希表，故元素无序，查找效率高。**
 
 -----
 * ####
   答：
 
------
-* ####
-  答：  
-
------
-* ####
-  答：
+---
 
 C++ 11
 -----
 
 * #### 什么是auto_ptr以及如何使用
-  答： auto_ptr可以代替指针进行类似指针的操作，并不用关心内存的释放，auto_ptr的析构函数自动释放它绑定的动态分配对象。
+  ​	auto_ptr可以代替指针进行类似指针的操作，并不用关心内存的释放，auto_ptr的析构函数自动释放它绑定的动态分配对象。
 
 -----
 
 * #### auto_ptr的实现
-  答：每次创建类的新对象的时候，初始化指针并将引用计数设置为1；
-当对象作为另一个对象的副本而创建的时候，拷贝构造函数，拷贝指针并增加与之相对应的引用计数
-对一个对象进行赋值的时候，赋值操作符减少左操作数所指对象的引用计数，并增加右操作数所指对象的引用计数
-调用析构函数的时候减少引用计数，如果引用计数减少至0，则删除基础对象
-重载*操作符和->操作符，使auto_ptr有类似于普通指针的操作
+  - 每次创建类的新对象的时候，初始化指针并将引用计数设置为1；
+- 当对象作为另一个对象的副本而创建的时候，拷贝构造函数，拷贝指针并增加与之相对应的引用计数
+- 对一个对象进行赋值的时候，赋值操作符减少左操作数所指对象的引用计数，并增加右操作数所指对象的引用计数
+- 调用析构函数的时候减少引用计数，如果引用计数减少至0，则删除基础对象
+- 重载*操作符和->操作符，使auto_ptr有类似于普通指针的操作
 
 -----
 
 * #### 使用auto_ptr的限制
-  答：auto_ptr所所指向的对象要求只能拥有一个拥有者
+  auto_ptr所所指向的对象要求只能拥有一个拥有者
 如下用法是错误的
+  
   ``` cpp
   classA *pA = new classA;
   auto_ptr<classA> ptr1(pA);
@@ -743,12 +868,71 @@ C++ 11
 
 
 
-* ####
-  答：
+* #### 说几个C++11的新特性
+  - auto类型推导
+  - 范围for循环
+  - lambda函数
+  - override 和 final 关键字
+  
+  ```cpp
+  /*如果不使用override，当你手一抖，将foo()写成了f00()会怎么样呢？结果是编译器并不会报错，因为它并不知道你的目的是重写虚函数，而是把它当成了新的函数。如果这个虚函数很重要的话，那就会对整个程序不利。
+  
+  　　所以，override的作用就出来了，它指定了子类的这个虚函数是重写的父类的，如果你名字不小心打错了的话，编译器是不会编译通过的：*/
+  class A
+  {
+      virtual void foo();
+  }
+  class B :public A
+  {
+      void foo(); //OK
+      virtual foo(); // OK
+      void foo() override; //OK
+  }
+  
+  class A
+  {
+      virtual void foo();
+  };
+  class B :A
+  {
+      virtual void f00(); //OK
+      virtual void f0o()override; //Error 
+  };
+  ```
+  
+  ```c++
+  /*当不希望某个类被继承，或不希望某个虚函数被重写，可以在类名和虚函数后添加final关键字，添加final关键字后被继承或重写，编译器会报错。例子如下：*/
+  
+  class Base
+  {
+      virtual void foo();
+  };
+   
+  class A : Base
+  {
+      void foo() final; // foo 被override并且是最后一个override，在其子类中不可以重写
+      void bar() final; // Error: 父类中没有 bar虚函数可以被重写或final
+  };
+  
+  class B final : A // 指明B是不可以被继承的
+  {
+      void foo() override; // Error: 在A中已经被final了
+  };
+   
+  class C : B // Error: B is final
+  {
+  };
+  ```
+  
 
 -----
 
-* ####
-  答：
+* #### 智能指针
+  
+  - 智能指针是在 <memory> 头文件中的std命名空间中定义的，该指针用于确保程序不存在内存和资源泄漏且是异常安全的。它们对RAII“获取资源即初始化”编程至关重要，RAII的主要原则是为将任何堆分配资源（如动态分配内存或系统对象句柄）的所有权提供给其析构函数包含用于删除或释放资源的代码以及任何相关清理代码的堆栈分配对象。大多数情况下，当初始化原始指针或资源句柄以指向实际资源时，会立即将指针传递给智能指针。
+  - 智能指针的设计思想：将基本类型指针封装为类对象指针（这个类肯定是个模板，以适应不同基本类型的需求），并在析构函数里编写delete语句删除指针指向的内存空间。
+    unique_ptr只允许基础指针的一个所有者。unique_ptr小巧高效；大小等同于一个指针且支持右值引用，从而可实现快速插入和对STL集合的检索。
+  - shared_ptr采用引用计数的智能指针，主要用于要将一个原始指针分配给多个所有者（例如，从容器返回了指针副本又想保留原始指针时）的情况。当所有的shared_ptr所有者超出了范围或放弃所有权，才会删除原始指针。大小为两个指针；一个用于对象，另一个用于包含引用计数的共享控制块。最安全的分配和使用动态内存的方法是调用
+  - make_shared标准库函数，此函数在动态分配内存中分配一个对象并初始化它，返回对象的shared_ptr。
 
 -----
