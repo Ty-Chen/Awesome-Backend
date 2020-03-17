@@ -166,28 +166,26 @@ const int y = 10;  // const常量
   const int* const p3 = &x;  // 指向常量的常量指针。
   ```
     ```cpp
-     //类中的const：
-
-      ```cpp
-      class C {
+     //类中的const：  
+    class C {
           ...
           const C& fun(const C& c) const {
               ...
           }
           ...
-
+  
           static int c;   // 静态变量
-          const int b;    // 常量
-
+        const int b;    // 常量
+  
           const static int a = 100;
-          static const int b = 200;
+        static const int b = 200;
           ...
       }；
-
+  
       int C::c = 10;  // 静态变量的初始化
-    ```
+  ```
   - 第一个const修饰函数返回值，返回一个const值，不能被修改；
-
+  
   - 第二个const修饰函数参数，函数中不能修改该参数，可以接收const或者非const的形参；
 
   - 第三个const修饰调用对象，也就是this，保证调用对象不会被修改。
@@ -654,15 +652,13 @@ remove只是简单地将元素移到了容器的最后面，迭代器还是可�
 -----
 
 * #### hash_map和map的区别在哪里？
-  答：
-
     | |map               |unordered_map  |
-    |--|--|--|
-    |Ordering          | increasing  order  ( by default )   |no ordering
-    |Implementation|Self balancing BST ( like RBT )|Hash Table
-    |Search Time|log(n)| average O(1), worst O(n)
-    |Insertion Time|log(n) + Rebalance| Same as search
-    |Deletion Time| log(n) + Rebalance|Same as search
+|--|--|--|
+    |Ordering          | increasing  order  ( by default )   |no ordering|
+    |Implementation|Self balancing BST ( like RBT )|Hash Table|
+    |Search Time|log(n)| average O(1), worst O(n)|
+    |Insertion Time|log(n) + Rebalance| Same as search|
+    |Deletion Time| log(n) + Rebalance|Same as search|
 
 -----
 * #### 什么时候需要用hash_map，什么时候需要用map?
