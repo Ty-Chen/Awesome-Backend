@@ -14,12 +14,13 @@ C和C++面试攻略
 ---
 
 * #### volatile的含义
-​	变量可能在编译器的控制或监控之外改变，告诉编译器不要优化该变量，如被系统时钟更新的变量。
+  ​	变量可能在编译器的控制或监控之外改变，告诉编译器不要优化该变量，如被系统时钟更新的变量。
 
 -----
 
 * #### OFFSETOF(s, m)的宏定义，s是结构类型，m是s的成员，求m在s中的偏移量
-``#define OFFSETOF（TYPE, MEMBER） size_t（&((TYPE*)0)->MEMBER）``
+  ``#define OFFSETOF（TYPE, MEMBER） size_t（&((TYPE*)0)->MEMBER）``
+  
 -----
 
 * #### C++虚函数是如何实现的？
