@@ -19,7 +19,7 @@
 数组和字符串
 ------
 
-数组字符串的问题通常包括子串问题、回文问题、合并或者查找，**通常其解法为双指针、回溯、动态规划**。
+数组字符串的问题通常包括子串问题、回文问题、查找元素，**通常其解法为双指针滑动、回溯、动态规划**。
 
 ### 子串问题
 
@@ -50,36 +50,390 @@ int maxsequence3(int a[], int len)
 
 -----
 
-* ####
+* #### 无重复字符的最长子串:给定一个字符串，请你找出其中不含有重复字符的最长子串的长度。(leetcode 3)
+
+  采取**双指针滑动窗口**求解
+
+  ```cpp
+  class Solution {
+  public:
+      int lengthOfLongestSubstring(string s) {
   
+          int start, end, size, maxSubString, len;
+          char val; 
+  
+          start = end = len = maxSubString = 0;
+          size = s.size();
+  
+          while (end < size)
+          {
+              val = s[end];
+              for (int i = start; i < end; i++)
+              {
+                  if (s[i] == val)
+                  {
+                      start = i + 1;
+                      len = end - start;
+                      break;
+                  }
+              }
+  
+              end++;
+              len++;
+              maxSubString = max(maxSubString, len);
+          }
+  
+          return maxSubString;
+      }
+  };
+  
+  ```
 
 -----
 
-* ####
-  
+* #### 串联所有单词的子串：给定一个字符串 **s** 和一些长度相同的单词 **words。**找出 **s** 中恰好可以由 **words** 中所有单词串联形成的子串的起始位置。注意子串要与 **words** 中的单词完全匹配，中间不能有其他字符，但不需要考虑 **words** 中单词串联的顺序。（leetcode 30）
+
+
 
 -----
 
-* ####
+* #### 最小覆盖子串：给你一个字符串 S、一个字符串 T，请在字符串 S 里面找出：包含 T 所有字母的最小子串。(leetcode 76)
 
 
 
 ---
 
-* ####
+* #### 至多包含两个不同字符的最长子串(leetcode 159)
+
+
+
+---
+
+* #### 长度最小的子数组：给定一个含有 **n** 个正整数的数组和一个正整数 **s ，**找出该数组中满足其和 **≥ s** 的长度最小的连续子数组**。**如果不存在符合条件的连续子数组，返回 0。(leetcode 209)
+
+
+
+---
+
+* #### 滑动窗口最大值：给定一个数组 *nums*，有一个大小为 *k* 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 *k* 个数字。滑动窗口每次只向右移动一位。返回滑动窗口中的最大值。(leetcode 239)
+
+
+
+---
+
+* #### 字符串的排列：给定两个字符串 **s1** 和 **s2**，写一个函数来判断 **s2** 是否包含 **s1** 的排列。(leetcode 567)
+
+
+
+---
+
+* #### 最小区间(leetcode 632)
+
+
+
+---
+
+* #### 最小窗口子序列(leetcode 727)
+
+
+
+
+
+---
+
+### 回文问题
+
+* #### 最长回文子串：给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。(leetcode 5)
+
+  本题至少有三种不错的做法
+
+  - 采用动态规划求解：`P(i, j) = (P(i + 1, j − 1) and Si == Sj )`
+  - 中心扩展法：回文中心的两侧互为镜像。因此，回文可以从它的中心展开，并且只有 2n - 1 个这样的中心。此处n表示插入元素间隔的个数：因为偶数回文会在字母之间。
+  - [马拉车算法](https://medium.com/hackernoon/manachers-algorithm-explained-longest-palindromic-substring-22cb27a5e96f)
+
+  ```cpp
+  // 动态规划
+  class Solution {
+  public:
+      string longestPalindrome(string s) {
   
+          int len = s.size();
+  
+          if (len == 0 || len == 1)
+              return s;
+  
+          int start = 0, max = 1;
+          int isPalin[len][len] = {0};
+  
+          for (int i = 0; i < len; i++)
+          {
+              isPalin[i][i] = 1;
+              if (i < len -1 && s[i] == s[i + 1])
+              {
+                  isPalin[i][i + 1] = 1;
+                  max = 2;
+                  start = i;
+              }
+          }
+  
+          for (int l = 3; l <= len; l++)
+          {
+              for (int i = 0; i + l - 1 < len; i++)
+              {
+                  int end = i + l - 1;
+                  if (s[i] == s[end] && isPalin[i + 1][end - 1] == 1 )
+                  {
+                      isPalin[i][end] = 1;
+                      max = l;
+                      start = i;
+                  }
+              }
+          }
+  
+          return s.substr(start, max);
+          
+      }
+  };
+  ```
+
+  ```cpp
+  // 中心扩展法
+  // 采用内联追求极限性能
+  inline 	int expandAroundCenter(string s, int left, int right)
+  	{
+  		int L = left, R = right;
+  		while (L >= 0 && R < s.length() && s[L] == s[R])
+  		{// 计算以left和right为中心的回文串长度
+  			L--;
+  			R++;
+  		}
+  		return R - L - 1;
+  	}
+  
+  class Solution{
+          public:
+      string longestPalindrome(string s) 
+  	{
+  		if (s.length() < 1)
+  		{
+  			return "";
+  		}
+  		int start = 0, end = 0;
+  		for (int i = 0; i < s.length(); i++)
+  		{
+  			int len1 = expandAroundCenter(s, i, i);//一个元素为中心
+  			int len2 = expandAroundCenter(s, i, i + 1);//两个元素为中心
+  			int len = max(len1, len2);
+  			if (len > end - start)
+  			{
+  				start = i - (len - 1) / 2;
+  				end = i + len / 2;
+  			}
+  		}
+  		return s.substr(start, end - start + 1);
+  	}
+  
+  };
+  ```
+
+  ```cpp
+  // 马拉车算法
+  class Solution{
+  public:
+  string longestPalindrome(string s)
+  {
+  	int len = s.length();
+  	if (len < 1)
+  	{
+  		return "";
+  	}
+  
+  	// 预处理
+  	string s1;
+  	for (int i = 0; i < len; i++)
+  	{
+  		s1 += "#";
+  		s1 += s[i];
+  	}
+  	s1 += "#";
+  
+  	len = s1.length();
+  	int MaxRight = 0;				// 当前访问到的所有回文子串，所能触及的最右一个字符的位置
+  	int pos = 0;					// MaxRight对应的回文串的对称轴所在的位置
+  	int MaxRL = 0;					// 最大回文串的回文半径
+  	int MaxPos = 0;					// MaxRL对应的回文串的对称轴所在的位置
+  	int RL[len] = {0};			// RL[i]表示以第i个字符为对称轴的回文串的回文半径
+  
+  	for (int i = 0; i < len; i++)
+  	{
+  		if (i < MaxRight)
+  		{// 1) 当i在MaxRight的左边
+  			RL[i] = min(RL[2 * pos - i], MaxRight - i);
+  		}
+  		else
+  		{// 2) 当i在MaxRight的右边
+  			RL[i] = 1;
+  		}
+  
+  
+  		// 尝试扩展RL[i]，注意处理边界
+  		while (i - RL[i] >= 0  // 可以把RL[i]理解为左半径,即回文串的起始位不能小于0
+  			&& i + RL[i] < len // 同上,即回文串的结束位不能大于总长
+  			&& s1[i - RL[i]] == s1[i + RL[i]]// 回文串特性，左右扩展，判断字符串是否相同
+  			)
+  		{
+  			RL[i] += 1;
+  		}
+  
+  		// 更新MaxRight, pos
+  		if (RL[i] + i - 1 > MaxRight)
+  		{
+  			MaxRight = RL[i] + i - 1;
+  			pos = i;
+  		}
+  
+  		// 更新MaxRL, MaxPos
+  		if (MaxRL <= RL[i])
+  		{
+  			MaxRL = RL[i];
+  			MaxPos = i;
+  		}
+  	}
+  	return s.substr((MaxPos - MaxRL + 1) / 2, MaxRL - 1);
+  }
+  
+  };
+  ```
+
+---
+
+* #### 判断一个整数是否是回文数。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。（leetcode 9)
+
+
+
+---
+
+* #### 
+
+
+
+---
+
+### 查找元素
+
+* #### 找指定的两数之和：给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那两个整数，并返回他们的数组下标。(leetcode 1)
+
+  最蠢的是遍历，好点的是采用Map存储和查找，最佳选择为边存储边查找，下面给出后两种的解法。注意后一种改用了[unsorted_map](https://blog.csdn.net/u013354486/article/details/103327973)，会有更好的性能。
+
+  ```cpp
+  class Solution {
+  public:
+      vector<int> twoSum(vector<int>& nums, int target) {
+          vector<int> result;
+          map<int, int> mapNums;
+          size_t count = nums.capacity();
+  
+          for (int i = 0; i < count; i++)
+          {
+              mapNums[nums[i]] = i;
+          }
+  
+          for (int i = 0; i < count; i++)
+          {
+              int complete = target - nums[i];
+              if (mapNums.find(complete) != mapNums.end() && mapNums[complete] != i)
+              {               
+                  result.push_back(i);
+                  result.push_back(mapNums[complete]);
+                  return result;
+              }
+          }
+  
+          return result;
+      }
+  };
+  ```
+
+  ```cpp
+  class Solution {
+  public:
+      vector<int> twoSum(vector<int>& nums, int target) {
+          //Key是数字，value是该数字的index
+          unordered_map<int, int> hash;
+          vector<int> result;
+          int numsSize = int(nums.size());
+          for (int i = 0; i < numsSize; i++)
+          {
+              int numberToFind = target - nums[i];
+  
+              //如果找到numberToFind，就return
+              if (hash.find(numberToFind) != hash.end())
+              {
+                  result.push_back(hash[numberToFind]);
+                  result.push_back(i);
+                  return result;
+              }
+  
+              //如果没有找到，把该数字的index放到hash表中
+              hash[nums[i]] = i;
+          }
+          return result;
+      }
+  };
+  ```
+
+-----
+
+* #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。
+  请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
+  你可以假设 nums1 和 nums2 不会同时为空。（leetcode 4)
+
+  本题规定时间复杂度为Log，因此使用二分法可满足要求
+
+  ```cpp
+  class Solution {
+  public:
+      double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+  		int n = nums1.size();
+  		int m = nums2.size();
+  
+  		if (n > m)  //保证数组1一定最短
+  		{
+  			return findMedianSortedArrays(nums2, nums1);
+  		}
+  
+  		// Ci 为第i个数组的割,比如C1为2时表示第1个数组只有2个元素。LMaxi为第i个数组割后的左元素。RMini为第i个数组割后的右元素。
+  		int LMax1, LMax2, RMin1, RMin2, c1, c2, lo = 0, hi = 2 * n;  //我们目前是虚拟加了'#'所以数组1是2*n长度
+  
+  		while (lo <= hi)   //二分
+  		{
+  			c1 = (lo + hi) / 2;  //c1是二分的结果
+  			c2 = m + n - c1;
+  
+  			LMax1 = (c1 == 0) ? INT_MIN : nums1[(c1 - 1) / 2];
+  			RMin1 = (c1 == 2 * n) ? INT_MAX : nums1[c1 / 2];
+  			LMax2 = (c2 == 0) ? INT_MIN : nums2[(c2 - 1) / 2];
+  			RMin2 = (c2 == 2 * m) ? INT_MAX : nums2[c2 / 2];
+  
+  			if (LMax1 > RMin2)
+  				hi = c1 - 1;
+  			else if (LMax2 > RMin1)
+  				lo = c1 + 1;
+  			else
+  				break;
+  		}
+  		return (max(LMax1, LMax2) + min(RMin1, RMin2)) / 2.0;
+      }
+  };
+  
+  ```
+
 -----
 
 * ####
-  
------
 
-* ####
-  
------
 
-* ####
-  
+
 -----
 
 链表
@@ -87,7 +441,7 @@ int maxsequence3(int a[], int len)
 
 主要包括手写单双链表、链表合并、链表查找、两个链表比较等。
 
-* #### 手写代码，实现一个双向循环链表的增删查操作？
+* #### 手写代码，实现一个双向循环链表的增删查操作
 
 ```cpp
   struct list_head
@@ -170,8 +524,59 @@ int maxsequence3(int a[], int len)
 
 -----
 
-* ####
-  答：
+* #### 两数相加：给出两个非空的链表用来表示两个非负的整数。其中, 它们各自的位数是按照逆序的方式存储的，并且它们的每个节点只能存储一位数字。(leetcode 2)
+  直接链表操作即可，考察基本的链表遍历、插入操作
+  
+  ```cpp
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+          int count = 0;
+          ListNode *num = new ListNode(-1);
+          ListNode *ptr = num;
+          
+          while (l1 || l2)
+          {
+              int sum=0;
+              if(l1)
+              {
+                  sum += l1->val;
+                  l1 = l1->next;
+              }
+              if(l2)
+              {
+                  sum += l2->val;
+                  l2 = l2->next;
+              }
+  
+              sum += count;
+              if (sum >= 10)
+              {
+                  count = 1;
+              }
+              else
+              {
+                  count = 0;
+              }
+  
+              ptr = ptr->next = new ListNode(sum % 10) ;
+          }
+  
+          if (count)
+               ptr = ptr->next = new ListNode(1) ;           
+  
+          return num->next;
+      }
+  };
+  ```
 -----
 
 * ####
@@ -383,40 +788,39 @@ int maxsequence3(int a[], int len)
 ------
 
 * #### 4G的long型整数中找到一个最大的，如何做？
-  答：要找到最大的肯定要遍历所有的数的，而且不能将数据全部读入内存，可能不足。算法的时间复杂度肯定是O（n）
-感觉就是遍历，比较。。。。还能怎么改进呢？？？？
-可以改进的地方，就是读入内存的时候，一次多读些。。。。
+  要找到最大的肯定要遍历所有的数的，而且不能将数据全部读入内存，可能不足。算法的时间复杂度肯定是O（n）
+可以改进的地方，就是读入内存的时候，一次多读些
 需要注意的就是每次从磁盘上尽量多读一些数到内存区，然后处理完之后再读入一批。减少IO次数，自然能够提高效率。而对于类快速排序方法，稍微要麻烦一些： 分批读入，假设是M个数，然后从这M个数中选出n个最大的数缓存起来，直到所有的N个数都分批处理完之后，再将各批次缓存的n个数合并起来再进行一次类快 速排序得到最终的n个最大的数就可以了。在运行过程中，如果缓存数太多，可以不断地将多个缓存合并，保留这些缓存中最大的n个数即可。由于类快速排序的时 间复杂度是O（N），这样分批处理再合并的办法，依然有极大的可能会比堆和败者树更优。当然，在空间上会占用较多的内存。
 
-  此题还有个变种，就是寻找K个最大或者最小的数。有以下几种算法：
-容量为K的最大堆/最小堆，假设K可以装入内存；
+此题还有个变种，就是寻找K个最大或者最小的数。有以下几种算法：
+  容量为K的最大堆/最小堆，假设K可以装入内存；
 如果N个数可以装入内存，且都小于MAX，那么可以开辟一个MAX大的数组，类似计数排序。。。从数组尾部扫描K个最大的数，头部扫描K个最小的数。
 
 ------
 
 * #### 有千万个string在内存怎么高速查找，插入和删除？
-  答：对千万个string做hash，可以实现高速查找，找到了，插入和删除就很方便了。
+  对千万个string做hash，可以实现高速查找，找到了，插入和删除就很方便了。
 -----
 
 
 * #### 找出1-10w中没有出现的两个数字
-  答：方法1：
-  设这些数保存在数组A中，用一个10w的数组B标志某一个数是否出现，i出现则B[i]=1,没出现则B[i]=0；扫描数组B，查找缺失的两个数。
-  时间复杂度：O(N)
-  空间复杂度：O(N)
+  - 方法1：
+    设这些数保存在数组A中，用一个10w的数组B标志某一个数是否出现，i出现则B[i]=1,没出现则B[i]=0；扫描数组B，查找缺失的两个数。
+    时间复杂度：O(N)
+    空间复杂度：O(N)
 
-  方法2：
-  设确实的两个数为X和Y，则我们可以通过累加1到10W的和减去数组A的和，得到X+Y的值S1：
-  X+Y = S1
-  同理，我们可以得到1到10W的平方和 减去 数组A中每个数的平方和，从而得到X^2 + Y^2的值：
-  X^2 + Y^2 = S2
-  根据两个方程可以解出X和Y。
-  这里需要注意的是，计算平方和的时候有可能会越界，可以使用unsigned long long，或者一边加(1到10W的平方和)一边减(数组A中每个数)。
+  - 方法2：
+    设确实的两个数为X和Y，则我们可以通过累加1到10W的和减去数组A的和，得到X+Y的值S1：
+    X+Y = S1
+    同理，我们可以得到1到10W的平方和 减去 数组A中每个数的平方和，从而得到X^2 + Y^2的值：
+    X^2 + Y^2 = S2
+    根据两个方程可以解出X和Y。
+    这里需要注意的是，计算平方和的时候有可能会越界，可以使用unsigned long long，或者一边加(1到10W的平方和)一边减(数组A中每个数)。
 -----
 
 
 * #### 判断数字是否出现在40亿个数中？给40亿个不重复的unsignedint的整数，没排过序的，然后再给几个数，如何快速判断这几个数是否在那40亿个数当中？
-  答：unsigned int 的取值范围是0到232-1。我们可以申请连续的232/8=512M的内存，用每一个bit对应一个unsigned int数字。首先将512M内存都初始化为0，然后每处理一个数字就将其对应的bit设置为1。当需要查询时，直接找到对应bit，看其值是0还是1即可。
+  ​        unsigned int 的取值范围是0到232-1。我们可以申请连续的232/8=512M的内存，用每一个bit对应一个unsigned int数字。首先将512M内存都初始化为0，然后每处理一个数字就将其对应的bit设置为1。当需要查询时，直接找到对应bit，看其值是0还是1即可。
 
   将这40亿个数分成两类: 最高位为0、最高位为1
   并将这两类分别写入到两个文件中，其中一个文件中数的个数<=20亿，而另一个>=20亿（这相当于折半了）；与要查找的数的最高位比较并接着进入相应的文件再查找。
@@ -427,7 +831,7 @@ int maxsequence3(int a[], int len)
 -----
 
 * #### 在一个文件中有10G个整数，乱序排列，要求找出中位数。内存限制为2G
-  答：假设整数用32bit来表示。
+  ​        假设整数用32bit来表示。
   第一步：要表示10G个整数，最少需要一个64位的数据空间。（10G = 5 * 2^31 > 2^32 )
   第二步：分区间
   2G的内存，能够表示多少个64bit，就能分多少个区间。（一个区间 就表示 一个64bit的数据空间）
@@ -445,7 +849,7 @@ int maxsequence3(int a[], int len)
 -----
 
 * #### 统计论坛在线人数分布。求一个论坛的在线人数，假设有一个论坛，其注册ID有两亿个，每个ID从登陆到退出会向一个日志文件中记下登陆时间和退出时间，要求写一个算法统计一天中论坛的用户在线分布，取样粒度为秒。
-  答：一天总共有 3600*24 = 86400秒。
+  ​    一天总共有 3600*24 = 86400秒。
   定义一个长度为86400的整数数组int delta[86400]，每个整数对应这一秒的人数变化值，可能为正也可能为负。开始时将数组元素都初始化为0。
   然后依次读入每个用户的登录时间和退出时间，将与登录时间对应的整数值加1，将与退出时间对应的整数值减1。
   这样处理一遍后数组中存储了每秒中的人数变化情况。
@@ -457,18 +861,25 @@ int maxsequence3(int a[], int len)
 -----
 
 * #### 需要多少只小白鼠才能在24小时内找到毒药有1000瓶水，其中有一瓶有毒，小白鼠只要尝一点带毒的水24小时后就会死亡，至少要多少只小白鼠才能在24小时时鉴别出那瓶水有毒？
-    答：每个老鼠只有死或活2种状态，因此每个老鼠可以看作一个bit，取0或1
+    ​       每个老鼠只有死或活2种状态，因此每个老鼠可以看作一个bit，取0或1
   N个老鼠可以看作N个bit，可以表达2^N种状态（其中第i个状态代表第i个瓶子有毒）
-  例如：当N＝2时，可以表达4种状态
-  0，0（ 一号老鼠活，二号老鼠活）
-  0，1（ 一号老鼠活，二号老鼠死）
-  1，0（ 一号老鼠死，二号老鼠活）
-  1，1（ 一号老鼠死，二号老鼠死）
-  具体来说，有A、B、C、D这4个瓶子，一号老鼠喝A和B， 二号老鼠喝B和C
-  如果 0，0 （ 一号老鼠活，二号老鼠活），说明是D有毒，第0个状态代表第4个瓶子有毒
-  如果 0，1 （ 一号老鼠活，二号老鼠死） ，说明是C有毒 ，第1个状态代表第3个瓶子有毒
-  如果 1，0 （ 一号老鼠死，二号老鼠活） ，说明是A有毒 ，第2个状态代表第1个瓶子有毒
-  如果 1，1 （ 一号老鼠死，二号老鼠死） ，说明是B有毒 ，第3个状态代表第2个瓶子有毒
+  例如：当N＝2时，可以表达4种状态，假设有A、B、C、D四个瓶子分别编号入下
+  
+  0， 0
+  
+  0， 1
+  
+  1， 0
+  
+  1， 1
+  
+  一号老鼠喝第一位为1的，二号老鼠喝第二位为1的，将老鼠活着记为0，死了记为1，则
+  如果 一号老鼠活，二号老鼠活，状态为（0, 0）说明是A有毒
+  如果 一号老鼠活，二号老鼠死 ,  状态为（0, 1）说明是B有毒 
+  如果 一号老鼠死，二号老鼠活 ，状态为（1, 0）说明是C有毒 
+  如果 一号老鼠死，二号老鼠死 ，状态为（1, 1）说明是D有毒
+  
+  ​    对N个瓶子也是一样的处理：让第一只老鼠喝所有第一位为1的瓶子，第二只喝第二位，依次喝下去。状态位和瓶子编号可以刚好对应，一次完成。
 
 -----
 
@@ -492,15 +903,31 @@ int maxsequence3(int a[], int len)
 越界问题
 -----
 * #### 两个数相乘，小数点后位数没有限制，请写一个高精度算法。
-  答：算法提示：
-输入 string a, string b； 计算string c=ab; 返回 c;
+  输入 string a, string b； 计算string c=ab; 返回 c;
 1，纪录小数点在a,b中的位置l1,l2，则需要小数点后移动位置数为l=length(a)+length(b)-l1-l2-2;
 2, 去掉a,b中的小数点，（a,b小数点后移，使a,b变为整数）
 3, 计算c=ab; （同整数的大数相乘算法）
 4，输出c,（注意在输出倒数第l个数时，输出一个小数点。若是输出的数少于l个，就补0）
 -----
-* ####
-  答：
+* #### 整数反转 ：给出一个 32 位的有符号整数，你需要将这个整数中每位上的数字进行反转。（leet code 7)
+  边界条件的考虑而已，记住就好。对接近最大正数和最小负数单独考虑，其他随意。
+  
+  ```cpp
+  class Solution {
+  public:
+      int reverse(int x) {
+          int rev = 0;
+          while (x != 0) {
+              int pop = x % 10;
+              x /= 10;
+              if (rev > INT_MAX/10 || (rev == INT_MAX / 10 && pop > 7)) return 0;
+              if (rev < INT_MIN/10 || (rev == INT_MIN / 10 && pop < -8)) return 0;
+              rev = rev * 10 + pop;
+          }
+          return rev;
+      }
+  };
+  ```
 -----
 * ####
   答：
