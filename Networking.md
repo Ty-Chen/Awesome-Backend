@@ -7,10 +7,11 @@
 2. TCP、UDP
 3. HTTP
 4. RPC
+5. 真实场景设计
 
 ---
 
-网络架构相关
+OSI基本知识
 -----
 
 * #### 在子网210.27.48.21/30种有多少个可用地址？分别是什么？
@@ -477,6 +478,402 @@ select到读事件，但是读到的数据量为0，说明对方已经关闭了s
 
 ---
 
+* #### TCP传输大规模数据包如何处理？
+
+  * 可以采取类似于HTTP的分隔符/r/n实现
+  * 可以采取在包头封装长度、索引信息实现
+
+---
+
+* #### TCP协议如何解决粘包、半包问题？
+
+  粘包就是连续给对端发送两个或者两个以上的数据包，对端在一次收取中可能收到的数据包大于 1 个，大于 1 个，可能是几个（包括一个）包加上某个包的部分，或者干脆就是几个完整的包在一起。当然，也可能收到的数据只是一个包的部分，这种情况一般也叫**半包**。
+
+  无论是半包还是粘包问题，其根源是上文介绍中 TCP 协议是流式数据格式。解决问题的思路还是想办法从收到的数据中把包与包的边界给区分出来。那么如何区分呢？目前主要有三种方法：
+
+  **固定包长的数据包**
+
+  顾名思义，即每个协议包的长度都是固定的。举个例子，例如我们可以规定每个协议包的大小是 64 个字节，每次收满 64 个字节，就取出来解析（如果不够，就先存起来）。
+
+  这种通信协议的格式简单但灵活性差。如果包内容不足指定的字节数，剩余的空间需要填充特殊的信息，如 \0（如果不填充特殊内容，如何区分包里面的正常内容与填充信息呢？）；如果包内容超过指定字节数，又得分包分片，需要增加额外处理逻辑——在发送端进行分包分片，在接收端重新组装包片（分包和分片内容在接下来会详细介绍）。
+
+  **以指定字符（串）为包的结束标志**
+
+  这种协议包比较常见，即字节流中遇到特殊的符号值时就认为到一个包的末尾了。例如，我们熟悉的 FTP协议，发邮件的 SMTP 协议，一个命令或者一段数据后面加上"\r\n"（即所谓的 **CRLF**）表示一个包的结束。对端收到后，每遇到一个”\r\n“就把之前的数据当做一个数据包。
+
+  这种协议一般用于一些包含各种命令控制的应用中，其不足之处就是如果协议数据包内容部分需要使用包结束标志字符，就需要对这些字符做转码或者转义操作，以免被接收方错误地当成包结束标志而误解析。
+
+  **包头 + 包体格式**
+
+  这种格式的包一般分为两部分，即包头和包体，包头是固定大小的，且包头中必须含有一个字段来说明接下来的包体有多大。
+
+  例如：
+
+  ```cpp
+  struct msg_header
+  {
+    int32_t bodySize;
+    int32_t cmd;
+  };
+  ```
+
+  这就是一个典型的包头格式，bodySize 指定了这个包的包体是多大。由于包头大小是固定的（这里是 size(int32_t) + sizeof(int32_t) = 8 字节），对端先收取包头大小字节数目（当然，如果不够还是先缓存起来，直到收够为止），然后解析包头，根据包头中指定的包体大小来收取包体，等包体收够了，就组装成一个完整的包来处理。在有些实现中，包头中的 bodySize可能被另外一个叫 packageSize 的字段代替，这个字段的含义是整个包的大小，这个时候，我们只要用 packageSize 减去包头大小（这里是 sizeof(msg_header)）就能算出包体的大小，原理同上。
+
+  > 在使用大多数网络库时，通常你需要根据协议格式自己给数据包分界和解析，一般的网络库不提供这种功能是出于需要支持不同的协议，由于协议的不确定性，因此没法预先提供具体解包代码。当然，这不是绝对的，也有一些网络库提供了这种功能。在 Java Netty 网络框架中，提供了FixedLengthFrameDecoder 类去处理长度是定长的协议包，提供了 DelimiterBasedFrameDecoder 类去处理按特殊字符作为结束符的协议包，提供 ByteToMessageDecoder 去处理自定义格式的协议包（可用来处理包头 + 包体 这种格式的数据包），然而在继承 ByteToMessageDecoder  子类中你需要根据你的协议具体格式重写 decode() 方法来对数据包解包。
+
+  [see this for more](https://mp.weixin.qq.com/s/XqGCaX94hCvrYI_Tvfq_yQ)
+
+---
+
+* #### TCP的心跳包设计
+
+  操作系统的 TCP/IP 协议栈其实提供了这个的功能，即 keepalive 选项。在 Linux 操作系统中，我们可以通过代码启用一个 socket 的心跳检测（即每隔一定时间间隔发送一个心跳检测包给对端），代码如下：
+
+  ```
+  //on 是 1 表示打开 keepalive 选项，为 0 表示关闭，0 是默认值
+  int on = 1;
+  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
+  ```
+
+  但是，即使开启了这个选项，这个选项默认发送心跳检测数据包的时间间隔是 7200 秒（2 小时），这时间间隔实在是太长了，不具有实用性。
+
+  我们可以通过继续设置 keepalive 相关的三个选项来改变这个时间间隔，它们分别是 TCP_KEEPIDLE、TCP_KEEPINTVL 和 TCP_KEEPCNT，示例代码如下：
+
+  ```cpp
+  //发送 keepalive 报文的时间间隔
+  int val = 7200;
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+  
+  //两次重试报文的时间间隔
+  int interval = 75;
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+  
+  int cnt = 9;
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
+  ```
+
+  TCP_KEEPIDLE 选项设置了发送 keepalive 报文的时间间隔，发送时如果对端回复 ACK。则本端 TCP 协议栈认为该连接依然存活，继续等 7200 秒后再发送 keepalive 报文；如果对端回复 RESET，说明对端进程已经重启，本端的应用程序应该关闭该连接。
+
+  如果对端没有任何回复，则本端做重试，如果重试 9 次（TCP_KEEPCNT 值）（前后重试间隔为 75 秒（TCP_KEEPINTVL 值））仍然不可达，则向应用程序返回 ETIMEOUT（无任何应答）或 EHOST 错误信息。
+
+  我们可以使用如下命令查看 Linux 系统上的上述三个值的设置情况：
+
+  ```shell
+  [root@iZ238vnojlyZ ~]# sysctl -a | grep keepalive
+  net.ipv4.tcp_keepalive_intvl = 75
+  net.ipv4.tcp_keepalive_probes = 9
+  net.ipv4.tcp_keepalive_time = 7200
+  ```
+
+  在 Windows 系统设置 keepalive 及对应选项的代码略有不同：
+
+  ```cpp
+  //开启 keepalive 选项
+  const char on = 1;
+  setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, (char *)&on, sizeof(on);
+  
+  // 设置超时详细信息
+  DWORD cbBytesReturned;
+  tcp_keepalive klive;
+  // 启用保活
+  klive.onoff = 1;
+  klive.keepalivetime = 7200;
+  // 重试间隔为10秒
+  klive.keepaliveinterval = 1000 * 10; 
+  WSAIoctl(socket, SIO_KEEPALIVE_VALS, &klive, sizeof(tcp_keepalive), NULL, 0, &cbBytesReturned, NULL, NULL);
+  ```
+
+  ### 应用层的心跳包机制设计
+
+  由于 keepalive 选项需要为每个连接中的 socket 开启，这不一定是必须的，可能会产生大量无意义的带宽浪费，且 keepalive 选项不能与应用层很好地交互，因此一般实际的服务开发中，还是建议读者在应用层设计自己的心跳包机制。那么如何设计呢？
+
+  从技术来讲，心跳包其实就是一个预先规定好格式的数据包，在程序中启动一个定时器，定时发送即可，这是最简单的实现思路。但是，如果通信的两端有频繁的数据来往，此时到了下一个发心跳包的时间点了，此时发送一个心跳包。这其实是一个流量的浪费，既然通信双方不断有正常的业务数据包来往，这些数据包本身就可以起到保活作用，为什么还要浪费流量去发送这些心跳包呢？所以，对于用于保活的心跳包，我们最佳做法是，设置一个上次包时间，每次收数据和发数据时，都更新一下这个包时间，而心跳检测计时器每次检测时，将这个包时间与当前系统时间做一个对比，如果时间间隔大于允许的最大时间间隔（实际开发中根据需求设置成 15 ~ 45 秒不等），则发送一次心跳包。总而言之，就是在与对端之间，没有数据来往达到一定时间间隔时才发送一次心跳包。
+
+  发心跳包的伪码：
+
+  ```cpp
+  bool CIUSocket::Send()
+  {
+      int nSentBytes = 0;
+      int nRet = 0;
+      while (true)
+      {
+          nRet = ::send(m_hSocket, m_strSendBuf.c_str(), m_strSendBuf.length(), 0);
+          if (nRet == SOCKET_ERROR)
+          {
+              if (::WSAGetLastError() == WSAEWOULDBLOCK)
+                  break;
+              else
+              {
+                  LOG_ERROR("Send data error, disconnect server:%s, port:%d.", m_strServer.c_str(), m_nPort);
+                  Close();
+                  return false;
+              }
+          }
+          else if (nRet < 1)
+          {
+              //一旦出现错误就立刻关闭Socket
+              LOG_ERROR("Send data error, disconnect server:%s, port:%d.", m_strServer.c_str(), m_nPort);
+              Close();
+              return false;
+          }
+  
+          m_strSendBuf.erase(0, nRet);
+          if (m_strSendBuf.empty())
+              break;
+  
+          ::Sleep(1);
+      }
+  
+      {
+          //记录一下最近一次发包时间
+          std::lock_guard<std::mutex> guard(m_mutexLastDataTime);
+          m_nLastDataTime = (long)time(NULL);
+      }
+  
+      return true;
+  }
+  
+  
+  bool CIUSocket::Recv()
+  {
+      int nRet = 0;
+      char buff[10 * 1024];
+      while (true)
+      {
+  
+          nRet = ::recv(m_hSocket, buff, 10 * 1024, 0);
+          if (nRet == SOCKET_ERROR)                //一旦出现错误就立刻关闭Socket
+          {
+              if (::WSAGetLastError() == WSAEWOULDBLOCK)
+                  break;
+              else
+              {
+                  LOG_ERROR("Recv data error, errorNO=%d.", ::WSAGetLastError());
+                  //Close();
+                  return false;
+              }
+          }
+          else if (nRet < 1)
+          {
+              LOG_ERROR("Recv data error, errorNO=%d.", ::WSAGetLastError());
+              //Close();
+              return false;
+          }
+  
+          m_strRecvBuf.append(buff, nRet);
+  
+          ::Sleep(1);
+      }
+  
+      {
+          std::lock_guard<std::mutex> guard(m_mutexLastDataTime);
+          //记录一下最近一次收包时间
+          m_nLastDataTime = (long)time(NULL);
+      }
+  
+      return true;
+  }
+  
+  void CIUSocket::RecvThreadProc()
+  {
+      LOG_INFO("Recv data thread start...");
+  
+      int nRet;
+      //上网方式 
+      DWORD   dwFlags;
+      BOOL    bAlive;
+      while (!m_bStop)
+      {
+          //检测到数据则收数据
+          nRet = CheckReceivedData();
+          //出错
+          if (nRet == -1)
+          {
+              m_pRecvMsgThread->NotifyNetError();
+          }
+          //无数据
+          else if (nRet == 0)
+          {           
+              long nLastDataTime = 0;
+              {
+                  std::lock_guard<std::mutex> guard(m_mutexLastDataTime);
+                  nLastDataTime = m_nLastDataTime;
+              }
+  
+              if (m_nHeartbeatInterval > 0)
+              {
+                  //当前系统时间与上一次收发数据包的时间间隔超过了m_nHeartbeatInterval
+                  //则发一次心跳包
+                  if (time(NULL) - nLastDataTime >= m_nHeartbeatInterval)
+                      SendHeartbeatPackage();
+              }
+          }
+          //有数据
+          else if (nRet == 1)
+          {
+              if (!Recv())
+              {
+                  m_pRecvMsgThread->NotifyNetError();
+                  continue;
+              }
+  
+              DecodePackages();
+          }// end if
+      }// end while-loop
+  
+      LOG_INFO("Recv data thread finish...");
+  }
+  ```
+
+  同理，检测心跳包的一端，应该是在与对端没有数据来往达到一定时间间隔时才做一次心跳检测。
+
+  心跳检测一端的伪码如下：
+
+  ```cpp
+  void BusinessSession::send(const char* pData, int dataLength)
+  {
+      bool sent = TcpSession::send(pData, dataLength);
+  
+      //发送完数据更新下发包时间
+      updateHeartbeatTime();      
+  }
+  void BusinessSession::handlePackge(char* pMsg, int msgLength, bool& closeSession, std::vector<std::string>& vectorResponse)
+  {
+      //对数据合法性进行校验
+      if (pMsg == NULL || pMsg[0] == 0 || msgLength <= 0 || msgLength > MAX_DATA_LENGTH)
+      {
+          //非法刺探请求，不做任何应答，直接关闭连接
+          closeSession = true;
+          return;
+      }
+  
+      //更新下收包时间
+      updateHeartbeatTime();
+  
+      //省略包处理代码...
+  }
+  
+  void BusinessSession::updateHeartbeatTime()
+  {
+      std::lock_guard<std::mutex> scoped_guard(m_mutexForlastPackageTime);
+      m_lastPackageTime = (int64_t)time(nullptr);
+  }
+  
+  bool BusinessSession::doHeartbeatCheck()
+  {
+      const Config& cfg = Singleton<Config>::Instance();
+      int64_t now = (int64_t)time(nullptr);
+  
+      std::lock_guard<std::mutex> lock_guard(m_mutexForlastPackageTime);
+      if (now - m_lastPackageTime >= cfg.m_nMaxClientDataInterval)
+      {
+          //心跳包检测，超时，关闭连接
+          LOGE("heartbeat expired, close session");
+          shutdown();
+          return true;
+      }
+  
+      return false;
+  }
+  
+  void TcpServer::checkSessionHeartbeat()
+  {
+      int64_t now = (int64_t)time(nullptr);
+      if (now - m_nLastCheckHeartbeatTime >= m_nHeartbeatCheckInterval)
+      {
+          m_spSessionManager->checkSessionHeartbeat();
+          m_nLastCheckHeartbeatTime = (int64_t)time(nullptr);
+      }      
+  }
+  
+  void SessionManager::checkSessionHeartbeat()
+  {   
+      std::lock_guard<std::mutex> scoped_lock(m_mutexForSession);
+      for (const auto& iter : m_mapSessions)
+      {
+          //这里调用 BusinessSession::doHeartbeatCheck()
+          iter.second->doHeartbeatCheck();
+      }  
+  }
+  ```
+
+  > 需要注意的是：一般是客户端主动给服务器端发送心跳包，服务器端做心跳检测决定是否断开连接。而不是反过来，从客户端的角度来说，客户端为了让自己得到服务器端的正常服务有必要主动和服务器保持连接状态正常，而服务器端不会局限于某个特定的客户端，如果客户端不能主动和其保持连接，那么就会主动回收与该客户端的连接。当然，服务器端在收到客户端的心跳包时应该给客户端一个心跳应答。
+
+  ### 带业务数据的心跳包
+
+  上面介绍的心跳包是从纯技术的角度来说的，在实际应用中，有时候我们需要定时或者不定时从服务器端更新一些数据，我们可以把这类数据放在心跳包中，定时或者不定时更新。
+
+  这类带业务数据的心跳包，就不再是纯粹技术上的作用了（这里说的技术的作用指的上文中介绍的心跳包起保活和检测死链作用）。
+
+  这类心跳包实现也很容易，即在心跳包数据结构里面加上需要的业务字段信息，然后在定时器中定时发送，客户端发给服务器，服务器在应答心跳包中填上约定的业务数据信息即可。
+
+  ### 心跳包与流量
+
+  通常情况下，多数应用场景下，与服务器端保持连接的多个客户端中，同一时间段活跃用户（这里指的是与服务器有频繁数据来往的客户端）一般不会太多。当连接数较多时，进出服务器程序的数据包通常都是心跳包（为了保活）。所以为了减轻网络代码压力，节省流量，尤其是针对一些 3/4 G 手机应用，我们在设计心跳包数据格式时应该尽量减小心跳包的数据大小。
+
+  ### 心跳包与调试
+
+  如前文所述，对于心跳包，服务器端的逻辑一般是在一定时间间隔内没有收到客户端心跳包时会主动断开连接。在我们开发调试程序过程中，我们可能需要将程序通过断点中断下来，这个过程可能是几秒到几十秒不等。等程序恢复执行时，连接可能因为心跳检测逻辑已经被断开。
+
+  调试过程中，我们更多的关注的是业务数据处理的逻辑是否正确，不想被一堆无意义的心跳包数据干扰实线。
+
+  鉴于以上两点原因，我们一般在调试模式下关闭或者禁用心跳包检测机制。代码大致如下：
+
+  ```cpp
+  ChatSession::ChatSession(const std::shared_ptr<TcpConnection>& conn, int sessionid) :
+  TcpSession(conn), 
+  m_id(sessionid),
+  m_seq(0),
+  m_isLogin(false)
+  {
+      m_userinfo.userid = 0;
+      m_lastPackageTime = time(NULL);
+  
+  //这里设置了非调试模式下才开启心跳包检测功能
+  #ifndef _DEBUG
+      EnableHearbeatCheck();
+  #endif
+  }
+  ```
+
+  当然，你也可以将开启心跳检测的开关做成配置信息放入程序配置文件中。
+
+  ### 心跳包与日志
+
+  实际生产环境，我们一般会将程序收到的和发出去的数据包写入日志中，但是无业务信息的心跳包信息是个例外，一般会刻意不写入日志，这是因为心跳包数据一般比较多，如果写入日志会导致日志文件变得很大，且充斥大量无意义的心跳包日志，所以一般在写日志时会屏蔽心跳包信息写入。
+
+  我这里的建议是，可以将心跳包信息是否写入日志做成一个配置开关，一般处于关闭状态，有需要时再开启。例如，对于一个 WebSocket 服务，ping 和 pong 是心跳包数据，下面示例代码按需输出心跳日志信息：
+
+  ```cpp
+  void BusinessSession::send(std::string_view strResponse)
+  {   
+      bool success = WebSocketSession::send(strResponse);
+  
+      if (success)
+      {
+          bool enablePingPongLog = Singleton<Config>::Instance().m_bPingPongLogEnabled;
+  
+          //其他消息正常打印，心跳消息按需打印
+          if (strResponse != "pong" || enablePingPongLog)
+          {
+              LOGI("msg sent to client [%s], sessionId: %s, session: 0x%0x, clientId: %s, accountId: %s, frontId: %s, msg: %s",
+                   getClientInfo(), m_strSessionId.c_str(), (int64_t)this, m_strClientID.c_str(), m_strAccountID.c_str(), BusinessSession::m_strFrontId.c_str(), strResponse.data());
+          }
+      }
+  }
+  ```
+
+---
+
+
+
+
+
+
+
+---
+
 ### HTTP
 
 * #### HTTP和HTTPS的区别
@@ -677,6 +1074,12 @@ Connection:keep-alive
   * 压缩：将文本数据进行压缩，减少带宽
   * SSL加速（SSL Acceleration）：使用SSL协议对HTTP协议进行加密，在通道内加密并加速
   * TCP缓冲：通过采用TCP缓冲技术，可以提高服务器端响应时间和处理效率，减少由于通信链路问题给服务器造成的连接负担。
+
+---
+
+* #### HTTP的多路复用和管线化
+
+  [see this](https://zhuanlan.zhihu.com/p/61423830)
 
 ---
 
@@ -984,3 +1387,558 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
 
   * Thrift 是跨语言的 RPC 框架。
   * Dubbo 支持服务治理，而 Thrift 不支持
+
+---
+
+### 真实场景设计
+
+* #### 主线程与工作线程的分工
+
+  服务器端为了能流畅处理多个客户端链接，一般在某个线程A里面accept新的客户端连接并生成新连接的socket fd，然后将这些新连接的socketfd给另外开的数个工作线程B1、B2、B3、B4，这些工作线程处理这些新连接上的网络IO事件（即收发数据），同时，还处理系统中的另外一些事务。这里我们将线程A称为主线程，B1、B2、B3、B4等称为工作线程。工作线程的代码框架一般如下：
+
+  
+
+  ```cpp
+  while (!m_bQuit)  {  
+      epoll_or_select_func();  
+    
+      handle_io_events();  
+    
+      handle_other_things();  }  
+  ```
+
+  在epoll_or_select_func()中通过select()或者poll/epoll()去检测socket fd上的io事件，若存在这些事件则下一步handle_io_events()来处理这些事件（收发数据），做完之后可能还要做一些系统其他的任务，即调用handle_other_things()。
+
+  
+
+  这样做有三个好处：
+
+  1. 线程A只需要处理新连接的到来即可，不用处理网络IO事件。由于网络IO事件处理一般相对比较慢，如果在线程A里面既处理新连接又处理网络IO，则可能由于线程忙于处理IO事件，而无法及时处理客户端的新连接，这是很不好的。
+
+  2. 线程A接收的新连接，可以根据一定的负载均衡原则将新的socket fd分配给工作线程。常用的算法，比如round robin，即轮询机制，即，假设不考虑中途有连接断开的情况，一个新连接来了分配给B1，又来一个分配给B2，再来一个分配给B3，再来一个分配给B4。如此反复，也就是说线程A记录了各个工作线程上的socket fd数量，这样可以最大化地来平衡资源，避免一些工作线程“忙死”，另外一些工作线程“闲死”的现象。
+
+  3. 即使工作线程不满载的情况下，也可以让工作线程做其他的事情。比如现在有四个工作线程，但只有三个连接。那么线程B4就可以在handle_other_thing()做一些其他事情。
+
+  
+
+  下面讨论一个很重要的效率问题：
+
+  在上述while循环里面，epoll_or_selec_func()中的epoll_wait/poll/select等函数一般设置了一个超时时间。如果设置超时时间为0，那么在没有任何网络IO时间和其他任务处理的情况下，这些工作线程实际上会空转，白白地浪费cpu时间片。如果设置的超时时间大于0，在没有网络IO时间的情况，epoll_wait/poll/select仍然要挂起指定时间才能返回，导致handle_other_thing()不能及时执行，影响其他任务不能及时处理，也就是说其他任务一旦产生，其处理起来具有一定的延时性。这样也不好。那如何解决该问题呢？
+
+  其实我们想达到的效果是，如果没有网络IO时间和其他任务要处理，那么这些工作线程最好直接挂起而不是空转；如果有其他任务要处理，这些工作线程要立刻能处理这些任务而不是在epoll_wait/poll/selec挂起指定时间后才开始处理这些任务。
+
+  我们采取如下方法来解决该问题，以linux为例，不管epoll_fd上有没有文件描述符fd，我们都给它绑定一个默认的fd，这个fd被称为唤醒fd。当我们需要处理其他任务的时候，向这个唤醒fd上随便写入1个字节的，这样这个fd立即就变成可读的了，epoll_wait()/poll()/select()函数立即被唤醒，并返回，接下来马上就能执行handle_other_thing()，其他任务得到处理。反之，没有其他任务也没有网络IO事件时，epoll_or_select_func()就挂在那里什么也不做。
+
+  这个唤醒fd，在linux平台上可以通过以下几种方法实现：
+
+  1. 管道pipe，创建一个管道，将管道绑定到epoll_fd上。需要时，向管道一端写入一个字节，工作线程立即被唤醒。
+
+  2. linux 2.6新增的eventfd：
+
+  ```
+  int eventfd(unsigned int initval, int flags); 
+  ```
+
+  
+
+  步骤也是一样，将生成的eventfd绑定到epoll_fd上。需要时，向这个eventfd上写入一个字节，工作线程立即被唤醒。
+
+  
+
+  3. 第三种方法最方便。即linux特有的socketpair，socketpair是一对相互连接的socket，相当于服务器端和客户端的两个端点，每一端都可以读写数据。
+
+  
+
+  ```
+  int socketpair(int domain, int type, int protocol, int sv[2]);
+  ```
+
+  
+
+  调用这个函数返回的两个socket句柄就是sv[0]，和sv[1]，在一个其中任何一个写入字节，在另外一个收取字节。
+
+  
+
+  将收取的字节的socket绑定到epoll_fd上。需要时，向另外一个写入的socket上写入一个字节，工作线程立即被唤醒。
+
+  如果是使用socketpair，那么domain参数一定要设置成AFX_UNIX。
+
+  
+
+  由于在windows，select函数只支持检测socket这一种fd，所以windows上一般只能用方法3的原理。而且需要手动创建两个socket，然后一个连接另外一个，将读取的那一段绑定到select的fd上去。这在写跨两个平台代码时，需要注意的地方。
+
+---
+
+* ####  一个服务器程序的架构介绍
+
+  #### 一、程序结构
+
+  该程序总共有 **17** 个线程，其中分为 **9** 个数据库工作线程 D 和一个日志线程 L，**6**个普通工作线程 W，一个主线程 M。（以下会用这些字母来代指这些线程）
+
+  ##### （一）、数据库工作线程的用途
+
+  **9** 个数据库工作线程在线程启动之初，与 mysql 建立连接，也就是说每个线程都与 mysql 保持一路连接，共 **9** 个数据库连接。
+
+  每个数据库工作线程同时存在两个任务队列，第一个队列 A 存放需要执行数据库增删查改操作的任务 **sqlTask**，第二个队列 B 存放 **sqlTask** 执行完成后的结果。**sqlTask** 执行完成后立即放入结果队列中，因而结果队列中任务也是一个个的需要执行的任务。大致伪代码如下：
+
+  ```cpp
+  void db_thread_func()  {  
+      while (!m_bExit)  
+      {  
+          if (NULL != (pTask = m_sqlTask.Pop()))  
+          {  
+              //从m_sqlTask中取出的任务先执行完成后，pTask将携带结果数据  
+              pTask->Execute();              
+              //得到结果后，立刻将该任务放入结果任务队列  
+              m_resultTask.Push(pTask);  
+              continue;  
+          }  
+  
+          sleep(1000);  
+      }//end while-loop 
+   }  
+  ```
+
+  现在的问题来了：
+
+  1. 任务队列 A 中的任务从何而来，目前只有消费者，没有生产者，那么生产者是谁？
+  2. 任务队列 B 中的任务将去何方，目前只有生产者没有消费者。
+
+  这两个问题先放一会儿，等到后面我再来回答。
+
+  ##### （二）工作线程和主线程
+
+  在介绍主线程和工作线程具体做什么时，我们介绍下服务器编程中常常抽象出来的几个概念（这里以 tcp 连接为例）：
+
+  1. **TcpServer** 即 Tcp 服务，服务器需要绑定ip地址和端口号，并在该端口号上侦听客户端的连接（往往由一个成员变量 **TcpListener** 来管理侦听细节）。所以一个 **TcpServer** 要做的就是这些工作。除此之外，每当有新连接到来时，**TcpServer** 需要接收新连接，当多个新连接存在时，**TcpServer** 需要有条不紊地管理这些连接：连接的建立、断开等，即产生和管理下文中说的 **TcpConnection** 对象。
+  2. 一个连接对应一个 **TcpConnection** 对象，**TcpConnection** 对象管理着这个连接的一些信息：如连接状态、本端和对端的 ip 地址和端口号等。
+  3.  数据通道对象 **Channel**，**Channel** 记录了 socket 的句柄，因而是一个连接上执行数据收发的真正执行者，**Channel** 对象一般作为**TcpConnection** 的成员变量。
+  4. **TcpSession** 对象，是将 **Channel** 收取的数据进行解包，或者对准备好的数据进行装包，并传给 **Channel** 发送。
+
+  **归纳起来**：一个 **TcpServer** 依靠 **TcpListener** 对新连接的侦听和处理，依靠**TcpConnection** 对象对连接上的数据进行管理，**TcpConnection** 实际依靠**Channel** 对数据进行收发，依靠 **TcpSession** 对数据进行装包和解包。也就是说一个 **TcpServer** 存在一个 **TcpListener**，对应多个 **TcpConnection**，有几个**TcpConnection** 就有几个 **TcpSession**，同时也就有几个 **Channel**。
+
+  以上说的 **TcpServer**、**TcpListener**、**TcpConnection**、**Channel** 和**TcpSession** 是服务器框架的网络层。一个好的网络框架，应该做到与业务代码脱耦。即上层代码只需要拿到数据，执行业务逻辑，而不用关注数据的收发和网络数据包的封包和解包以及网络状态的变化（比如网络断开与重连）。
+
+  **拿数据的发送来说**：
+
+  当业务逻辑将数据交给 **TcpSession**，**TcpSession** 将数据装好包后（装包过程后可以有一些加密或压缩操作），交给 TcpConnection::SendData()，而TcpConnection::SendData() 实际是调用 **Channel::SendData()**，因为**Channel** 含有 socket 句柄，所以 **Channel::SendData()** 真正调用send()/sendto()/write() 方法将数据发出去。
+
+  对于数据的接收，稍微有一点不同：
+
+  通过 select()/poll()/epoll() 等IO multiplex技术，确定好了哪些 **TcpConnection**上有数据到来后，激活该 **TcpConnection** 的 **Channel** 对象去调用recv()/recvfrom()/read() 来收取数据。数据收到以后，将数据交由 **TcpSession**来处理，最终交给业务层。注意数据收取、解包乃至交给业务层是一定要分开的。我的意思是：最好不要解包并交给业务层和数据收取的逻辑放在一起。因为数据收取是 IO 操作，而解包和交给业务层是逻辑计算操作。IO 操作一般比逻辑计算要慢。到底如何安排要根据服务器业务来取舍，也就是说你要想好你的服务器程序的性能瓶颈在网络 IO 还是逻辑计算，即使是网络 IO，也可以分为上行操作和下行操作，上行操作即客户端发数据给服务器，下行即服务器发数据给客户端。有时候数据上行少，下行大。（如游戏服务器，一个 npc 移动了位置，上行是该客户端通知服务器自己最新位置，而下行确是服务器要告诉在场的每个客户端）。
+
+  工作线程的流程：
+
+  ```cpp
+  while (!m_bQuit)  
+  {  
+      epoll_or_select_func();  
+  
+      handle_io_events();  
+  
+      handle_other_things();  
+  }
+  ```
+
+
+  其中 epoll_or_select_func() 即是上文所说的通过 select()/poll()/epoll() 等 IO multiplex 技术，确定好了哪些 **TcpConnection** 上有数据到来。我的服务器代码中一般只会监测 socket 可读事件，而不会监测 socket 可写事件。至于如何发数据，文章后面会介绍。所以对于可读事件，以 epoll 为例，这里需要设置的标识位是：
+
+  - **EPOLLIN** 普通可读事件（当连接正常时，产生这个事件，recv()/read()函数返回收到的字节数；当连接关闭，这两个函数返回0，也就是说我们设置这个标识已经可以监测到新来数据和对端关闭事件）
+  - **EPOLLRDHUP** 对端关闭事件（linux man 手册上说这个事件可以监测对端关闭，但我实际调试时发送即使对端关闭也没触发这个事件，仍然是EPOLLIN，只不过此时调用recv()/read()函数，返回值会为0，所以实际项目中是否可以通过设置这个标识来监测对端关闭，仍然待考证）
+  - **EPOLLPRI** 带外数据
+
+  muduo 里面将 **epoll_wait** 的超时事件设置为 **1** 毫秒，我的另一个项目将**epoll_wait** 超时时间设置为 **10** 毫秒。这两个数值供大家参考。
+
+  这个项目中，工作线程和主线程都是上文代码中的逻辑，主线程监听侦听socket 上的可读事件，也就是监测是否有新连接来了。主线程和每个工作线程上都存在一个 epollfd。如果新连接来了，则在主线程的 handle_io_events() 中接受新连接。产生的新连接的socket句柄挂接到哪个线程的 epollfd 上呢？这里采取的做法是 **round-robin** 算法，即存在一个对象 **CWorkerThreadManager** 记录了各个工作线程上工作状态。伪码大致如下：
+
+  ```cpp
+  void attach_new_fd(int newsocketfd)  
+  {  
+      workerthread = get_next_worker_thread(next);  
+      workerthread.attach_to_epollfd(newsocketfd);  
+      ++next;  
+      if (next > max_worker_thread_num)  
+          next = 0;  
+  }  
+  ```
+
+  即先从第一个工作线程的 epollfd 开始挂接新来 socket，接着累加索引，这样下次就是第二个工作线程了。如果所以超出工作线程数目，则从第一个工作重新开始。这里解决了新连接 socket “负载均衡”的问题。在实际代码中还有个需要注意的细节就是：epoll_wait 的函数中的 struct epoll_event 数量开始到底要设置多少个才合理？存在的顾虑是，多了浪费，少了不够用，我在曾经一个项目中直接用的是 4096：
+
+  ```cpp
+  const int EPOLL_MAX_EVENTS = 4096;  
+  const int dwSelectTimeout = 10000;  
+  struct epoll_event events[EPOLL_MAX_EVENTS];  
+  int nfds = epoll_wait(m_fdEpoll, events, EPOLL_MAX_EVENTS, dwSelectTimeout / 1000);
+  ```
+
+
+  我在陈硕的 muduo 网络库中发现作者才用了一个比较好的思路，即动态扩张数量：开始是 **n** 个，当发现有事件的 fd 数量已经到达 **n** 个后，将 struct epoll_event 数量调整成 **2n** 个，下次如果还不够，则变成 **4n** 个，以此类推，作者巧妙地利用 stl::vector 在内存中的连续性来实现了这种思路：
+
+  ```cpp
+  //初始化代码  
+  std::vector<struct epoll_event> events_(16);  
+  
+  //线程循环里面的代码  
+  while (m_bExit)  
+  {  
+      int numEvents = ::epoll_wait(epollfd_, &*events_.begin(), static_cast<int>(events_.size()), 1);  
+      if (numEvents > 0)  
+      {  
+          if (static_cast<size_t>(numEvents) == events_.size())  
+          {  
+              events_.resize(events_.size() * 2);  
+          }  
+      }  
+  }
+  ```
+
+  读到这里，你可能觉得工作线程所做的工作也不过就是调用 **handle_io_events()**来接收网络数据，其实不然，工作线程也可以做程序业务逻辑上的一些工作。也就是在 **handle_other_things()** 里面。那如何将这些工作加到**handle_other_things()** 中去做呢？写一个队列，任务先放入队列，再让**handle_other_things()** 从队列中取出来做？我在该项目中也借鉴了muduo库的做法。即 **handle_other_things()** 中调用一系列函数指针，伪码如下：
+
+  ```cpp
+  void do_other_things()  
+  {  
+      somefunc();  
+  }
+  //m_functors是一个stl::vector,其中每一个元素为一个函数指针  
+  void somefunc()  
+  {  
+      for (size_t i = 0; i < m_functors.size(); ++i)  
+      {  
+          m_functors[i]();  
+      }  
+  
+      m_functors.clear();  
+  }
+  ```
+
+  当任务产生时，只要我们将执行任务的函数 **push_back** 到 **m_functors** 这个 stl::vector 对象中即可。但是问题来了，如果是其他线程产生的任务，两个线程同时操作 **m_functors**，必然要加锁，这也会影响效率。muduo 是这样做的：
+
+  ```cpp
+  void add_task(const Functor& cb)  
+  {  
+      std::unique_lock<std::mutex> lock(mutex_);  
+      m_functors.push_back(cb);     
+  }  
+  
+  void do_task()  
+  {  
+      std::vector<Functor> functors;  
+      {  
+          std::unique_lock<std::mutex> lock(mutex_);  
+          functors.swap(m_functors);  
+      }  
+  
+      for (size_t i = 0; i < functors.size(); ++i)  
+      {  
+          functors[i]();  
+      }  
+  }
+  ```
+
+
+  看到没有，利用一个栈变量 **functors** 将 **m_functors** 中的任务函数指针倒换（swap）过来了，这样大大减小了对 m_functors 操作时的加锁粒度。前后变化：变化前，相当于原来 A 给 B 多少东西，B 消耗多少，A 给的时候，B 不能消耗；B 消耗的时候A不能给。现在变成A将东西放到篮子里面去，B 从篮子里面拿，B 如果拿去一部分后，只有消耗完了才会来拿，或者 A 通知 B 去篮子里面拿，而 B 忙碌时，A 是不会通知 B 来拿，这个时候 A 只管将东西放在篮子里面就可以了。
+
+  ```cpp
+  bool bBusy = false;  
+  void add_task(const Functor& cb)  
+  {  
+      std::unique_lock<std::mutex> lock(mutex_);  
+      m_functors_.push_back(cb);  
+  
+      //B不忙碌时只管往篮子里面加，不要通知B  
+      if (!bBusy)  
+      {  
+          wakeup_to_do_task();  
+      }  
+  }  
+  
+  void do_task()  
+  {  
+      bBusy = true;  
+      std::vector<Functor> functors;  
+      {  
+          std::unique_lock<std::mutex> lock(mutex_);  
+          functors.swap(pendingFunctors_);  
+      }  
+  
+      for (size_t i = 0; i < functors.size(); ++i)  
+      {  
+          functors[i]();  
+      }  
+  
+      bBusy = false;  
+  }
+  ```
+
+
+  看，多巧妙的做法！
+
+  因为每个工作线程都存在一个 **m_functors**，现在问题来了，如何将产生的任务均衡地分配给每个工作线程。这个做法类似上文中如何将新连接的 socket 句柄挂载到工作线程的 epollfd 上，也是 round-robin 算法。上文已经描述，此处不再赘述。
+
+  还有种情况，就是希望任务产生时，工作线程能够立马执行这些任务，而不是等 epoll_wait 超时返回之后。这个时候的做法，就是使用一些技巧唤醒epoll_wait，Linux 系统可以使用 **socketpair** 或 timerevent、eventfd 等技巧.
+
+  上文中留下三个问题：
+
+  1. ***数据库线程任务队列A中的任务从何而来，目前只有消费者，没有生产者，那么生产者是谁？***
+  2. ***数据库线程任务队列B中的任务将去何方，目前只有生产者没有消费者。***
+  3. ***业务层的数据如何发送出去？***
+
+  问题 1 的答案是：业务层产生任务可能会交给数据库任务队列A，这里的业务层代码可能就是工作线程中 **do_other_things()** 函数执行体中的调用。至于交给这个 9 个数据库线程的哪一个的任务队列，同样采用了 **round-robin** 算法。所以就存在一个对象 **CDbThreadManager** 来管理这九个数据库线程。下面的伪码是向数据库工作线程中加入任务：
+
+  ```cpp
+  bool CDbThreadManager::AddTask(IMysqlTask* poTask )  
+  {  
+      if (m_index >= m_dwThreadsCount)  
+      {  
+          m_index = 0;  
+      }  
+  
+      return m_aoMysqlThreads[m_index++].AddTask(poTask);  
+  }
+  ```
+
+
+  同理问题 2 中的消费者也可能就是 **do_other_things()** 函数执行体中的调用。
+
+  现在来说问题 3，业务层的数据产生后，经过 TcpSession 装包后，需要发送的话，产生任务丢给工作线程的 do_other_things()，然后在相关的 Channel 里面发送，因为没有监测该 socket 上的可写事件，所以该数据可能调用 send() 或者 write() 时会阻塞，没关系，sleep() 一会儿，继续发送，一直尝试，到数据发出去。伪码如下：
+
+  ```cpp
+  bool Channel::Send()  
+  {  
+      int offset = 0;  
+      while (true)  
+      {  
+          int n = ::send(socketfd, buf + offset, length - offset);  
+          if (n == -1)  
+          {  
+              if (errno == EWOULDBLOCK)  
+              {  
+                  ::sleep(100);  
+                  continue;  
+              }  
+          }  
+          //对方关闭了socket，这端建议也关闭  
+          else if (n == 0)  
+          {  
+              close(socketfd);  
+              return false;  
+          }  
+  
+          offset += n;  
+          if (offset >= length)  
+              break;  
+  
+      }  
+  
+      return true;      
+  }
+  ```
+
+---
+
+* #### 服务器开发中网络数据分析与故障排查
+
+  **一、 操作系统提供的网络接口**
+
+  为了能更好的排查网络通信问题，我们需要熟悉操作系统提供的以下网络接口函数，列表如下：
+
+  | 接口函数名称 | 接口函数描述       | 接口函数签名                                                 |
+  | ------------ | ------------------ | ------------------------------------------------------------ |
+  | socket       | 创建套接字         | int socket(int domain, int type, int  protocol);             |
+  | connect      | 连接一个服务器地址 | int connect(int sockfd, const struct  sockaddr *addr,          socklen_t addrlen); |
+  | send         | 发送数据           | ssize_t send(int sockfd, const void *buf,  size_t len, int flags); |
+  | recv         | 收取数据           | ssize_t recv(int sockfd, void *buf,  size_t len, int flags); |
+  | accept       | 接收连接           | int accept4(int sockfd, struct sockaddr  *addr,          socklen_t *addrlen, int  flags); |
+  | shutdown     | 关闭收发链路       | int shutdown(int sockfd, int how);                           |
+  | close        | 关闭套接字         | int close(int fd);                                           |
+  | setsockopt   | 设置套接字选项     | int setsockopt(int sockfd, int level, int  optname,           const void *optval,  socklen_t optlen); |
+
+  
+
+  注意：这里以berkeley提供的标准为例，不包括特定操作系统上特有的接口函数（如Windows平台的WSASend，linux的accept4），也不包括实际与网络数据来往不相关的函数（如select、linux的epoll），这里只讨论与tcp相关的接口函数，像与udp相关的函数sendto/recvfrom等函数与此类似。
+
+  下面讨论一下以上函数的一些使用注意事项：
+
+  1. 以上函数如果调用出错后，返回值均为-1；但是返回值是-1，不一定代表出错，这还得根据对应的套接字模式（阻塞与非阻塞模式）。
+
+  2. 默认使用的socket函数创建的套接字是阻塞模式的，可以调用相关接口函数将其设置为非阻塞模式（Windows平台可以使用ioctlsocket函数，linux平台可以使用fcntl函数，具体设置方法可以参考[这里](http://mp.weixin.qq.com/s?__biz=MzU2MTQ1MzI3NQ==&mid=2247483953&idx=1&sn=290847bffc273bbeb33ae1d71a53ab00&chksm=fc79c385cb0e4a93d9a4f2d85184c10e8ac498aea6a87a7afe3641d8ed0d1b0e043c062560e8&scene=21#wechat_redirect)。）。阻塞模式和非阻塞模式的套接字，对服务器的连接服务器和网络数据的收发行为影响很大。详情如下：
+
+     * **阻塞模式**下，connect函数如果不能立刻连上服务器，会导致执行流阻塞在那里一会儿，直到connect连接成功或失败或网络超时；而非阻塞模式下，无论是否连接成功connect将立即返回，此时如果未连接成功，返回值将是-1，错误码是EINPROGRESS，表示连接操作仍然在进行中。Linux平台后续可以通过使用select/poll等函数检测该socket是否可写来判断连接是否成功。
+
+     * **阻塞套接字模式**下，send函数如果由于对端tcp窗口太小，不足以将全部数据发送出去，将阻塞执行流，直到出错或超时或者全部发送出去为止；同理recv函数如果当前协议栈系统缓冲区中无数据可读，也会阻塞执行流，直到出错或者超时或者读取到数据。send和recv函数的超时时间可以参考下文关于常用socket选项的介绍。
+
+     * **非阻塞套接字模式**下，如果由于对端tcp窗口太小，不足以将数据发出去，它将立刻返回，不会阻塞执行流，此时返回值为-1，错误码是EAGAIN或EWOULDBLOCK，表示当前数据发不出去，希望你下次再试。但是返回值如果是-1，也可能是真正的出错了，也可能得到错误码EINTR，表示被linux信号中断了，这点需要注意一下。recv函数与send函数情形一样。
+
+  3. send函数虽然名称叫“send”，但是其并不是将数据发送到网络上去，只是将数据从应用层缓冲区中拷贝到协议栈内核缓冲区中，具体什么时候发送到网络上去，与协议栈本身行为有关系（socket选项nagle算法与这个有关系，下文介绍常见套接字选项时会介绍），这点需要特别注意，所以即使send函数返回一个大于0的值n，也不能表明已经有n个字节发送到网络上去了。同样的道理，recv函数也不是从网络上收取数据，只是从协议栈内核缓冲区拷贝数据至应用层缓冲区，并不是真正地从网络上收数据，所以，调用recv时，操作系统的协议栈已经将数据从网络上收到自己的内核缓冲区中了，recv仅仅是一次数据拷贝操作而已。
+
+  4. 由于套接字实现是收发全双工的，收和发通道相互独立，不会相互影响，shutdown函数是用来选择关闭socket收发通道中某一路（当然，也可以两路都关闭），其how参数取值一般有三个：SHUT_RD/SHUT_WR/SHUT_RDWR，SHUT_RD表示关闭收消息链路，即该套接字不能再收取数据，同理SHUT_WR表示关闭套接字发消息链路，但是这里有个问题，有时候我们需要等待缓冲区中数据发送完后再关闭连接怎么办？这里就要用到套接字选项LINGER，关于这个选项请参考下文常见的套接字选项介绍。最后，SHUT_RDWR同时关闭收消息链路和发消息链路。通过上面的分析，我们得出结论，shutdown函数并不会要求操作系统底层回收套接字等资源，真正会回收资源是close函数，这个函数会要求操作系统回收相关套接字资源，并释放对ip地址与端口号二元组的占用，但是由于tcp四次挥手最后一个阶段有个TIME_WAIT状态（关于这个状态下文介绍tcp三次握手和四次回收时会详细介绍），导致与该socket相关的端口号资源不会被立即释放，有时候为了达到释放端口用来复用，我们会设置套接字选项SOL_REUSEPORT（关于这个选项，下文会介绍）。综合起来，我们关闭一个套接字，一般会先调用shutdown函数再调用close函数，这就是所谓的优雅关闭：
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lk6zY768WbNNXxuV90XHiaKM89NRVCs8sV7u9ZsbAT9wqib9hhW4QnhWZg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  5. 常见的套接字选项
+
+  严格意义上说套接字选项是有不同层级的（level），如socket级别、TCP级别、IP级别，这里我们不区分具体的级别。
+
+  - **SO_SNDTIMEO与SO_RCVTIMEO**
+
+  这两个选项用于设置阻塞模式下套接字，SO_SNDTIMEO用于在send数据由于对端tcp窗口太小，发不出去而最大的阻塞时长；SO_RCVTIMEO用于recv函数因接受缓冲区无数据而阻塞的最大阻塞时长。如果你需要获取它们的默认值，请使用getsockopt函数。
+
+  - **TCP_NODELAY**
+
+  操作系统底层协议栈默认有这样一个机制，为了减少网络通信次数，会将send等函数提交给tcp协议栈的多个小的数据包合并成一个大的数据包，最后再一次性发出去，也就是说，如果你调用send函数往内核协议栈缓冲区拷贝了一个数据，这个数据也许不会马上发到网络上去，而是要等到协议栈缓冲区积累到一定量的数据后才会一次性发出去，我们把这种机制叫做nagle算法。默认打开了这个机制，有时候我们希望关闭这种机制，让send的数据能够立刻发出去，我们可以选择关闭这个算法，这就可以通过设置套接字选项TCP_NODELAY，即关闭nagle算法。
+
+  - **SO_LINGER**
+
+  linger这个单词本身的意思，是“暂停、逗留”。这个选项的用处是用于解决，当需要关闭套接字时，协议栈发送缓冲区中尚有未发送出去的数据，等待这些数据发完的最长等待时间。
+
+  - **SO_REUSEADDR/SO_REUSEPORT**
+
+  一个端口，尤其是作为服务器端端口在四次挥手的最后一步，有一个为TIME_WAIT的状态，这个状态一般持续2MSL（MSL，maximum segment life， 最大生存周期，RFC上建议是2分钟）。这个状态存在原因如下：1. 保证发出去的ack能被送达（超时会重发ack）2. 让迟来的报文有足够的时间被丢弃，反过来说，如果不存在这个状态，那么可以立刻复用这个地址和端口号，那么可能会收到老的连接迟来的数据，这显然是不好的。为了立即回收复用端口号，我们可以通过开启套接字SO_REUSEADDR/SO_REUSEPORT。
+
+  - **SO_KEEPALIVE**
+
+  默认情况下，当一个连接长时间没有数据来往，会被系统防火墙之类的服务关闭。为了避免这种现象，尤其是一些需要长连接的应用场景下，我们需要使用心跳包机制，即定时从两端定时发一点数据，这种行为叫做“保活”。而tcp协议栈本身也提供了这种机制，那就是设置套接字SO_KEEPALIVE选项，开启这个选项后，tcp协议栈会定时发送心跳包探针，但是这个默认时间比较长（2个小时），我们可以继续通过相关选项改变这个默认值。
+
+  **二、常用的网络故障排查工具**
+
+  1. ping
+
+  ​	ping命令可用于测试网络是否连通。
+
+  2. telnet
+
+     命令使用格式：
+
+     telnet  ip或域名 port
+
+     例如：
+
+     telnet 120.55.94.78 8888
+
+     telnet www.baidu.com 80
+
+  结合ping和telnet命令我们就可以判断一个服务器地址上的某个端口号是否可以对外提供服务。
+
+  由于我们使用的开发机器以windows居多，默认情况下，windows系统的telnet命令是没有打开的，我们可以在【控制面板】- 【程序】- 【程序和功能】- 【打开或关闭Windows功能】中打开telnet功能。
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lkuNiaiaJQlK7R0O3aoIk3sicJlp80G8JgZcGibLSusjHslE4D3hFU7uRnEQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  
+
+  3. host命令
+     host 命令可以解析域名得到对应的ip地址。例如，我们要得到www.baidu.com这个域名的ip地址，可以输入：host www.baidu.com
+
+  4. netstat命令
+
+     常见的选项有：
+
+     -a (all)显示所有选项，netstat默认不显示LISTEN相关
+
+     -t (tcp)仅显示tcp相关选项
+
+     -u (udp)仅显示udp相关选项
+
+     -n 拒绝显示别名，能显示数字的全部转化成数字。(重要)
+
+     -l 仅列出有在 Listen (监听) 的服務状态
+
+     -p 显示建立相关链接的程序名(macOS中表示协议 -p protocol)
+
+     -r 显示路由信息，路由表
+
+     -e 显示扩展信息，例如uid等
+
+     -s 按各个协议进行统计 (重要)
+
+     -c 每隔一个固定时间，执行该netstat命令。
+
+  5. lsof命令
+
+     lsof，即list opened filedescriptor，即列出当前操作系统中打开的所有文件描述符，socket也是一种file descriptor，常见的选项是:
+
+     -i 列出系统打开的socket fd
+
+     -P 不要显示端口号别名
+
+     -n 不要显示ip地址别名（如localhost会用127.0.0.1来代替）
+
+     +c w 程序列名称最大可以显示到w个字符。
+
+     常见的选项组合为lsof –i –Pn：
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lkic111oDibict0pONEVVf7dSmY02QQtsB0UVHv2HFZdxYhBOxPvmibtdRyQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  
+
+  ​	可以看到列出了当前侦听的socket，和连接socket的tcp状态。
+
+  6. pstack
+
+     严格意义上来说，这个不算网络排查故障和调试命令，但是我们可以利用这个命令来查看某个进程的线程数量和线程调用堆栈是否运行正常。指令使用格式：
+
+     pstack pid
+
+     即，pstack 进程号，如：
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lk3UM5LK5Liae55PnLJ1cWXPJiaJQZo80b1afZrgeN9q2uiazzVlRibsJTLw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  7.nc命令
+
+  ​	即netcat命令，这个工具在排查网络故障时非常有用，因而被业绩称为网络界的“瑞士军刀”。常见的用法如下：
+
+  - 模拟服务器端在指定ip地址和端口号上侦听
+
+    nc –l 0.0.0.0 8888
+
+  - 模拟客户端连接到指定ip地址和端口号
+
+    nc 0.0.0.0 8888
+
+    我们知道客户端连接服务器一般都是操作系统随机分配一个可用的端口号连接到服务器上去，这个指令甚至可以指定使用哪个端口号连接，如：
+
+    nc –p 12345 127.0.0.1 8888
+
+    客户端使用端口12345去连接服务器127.0.0.1::8888。
+
+  - 使用nc命令发消息和发文件
+
+  客户端
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lkDltdcRQVNw7UcWVgQdM5M2tEamod4qVo22zaoZHsEzwfl3F7en6G2g/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  服务器
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/F8XfiaOtAfBFHibjp9uoXsU3npTM5TT9lk5Bv4FCnkNyygTKcLs8zUeiaOMZdBEehLZHq6ia67M2vXheXsLMgIRFjg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  
+
+  8. tcpdump
+
+  这个是linux系统自带的抓包工具，功能非常强大，默认需要开启root权限才能使用。
+
+  ![img](https://mmbiz.qpic.cn/mmbiz_png/TufFCFqd0g0oXXaQezaY3f8nueK72Hk8yf0dxUng5gv0eaXgPU3mBnZUUld5QUWia56ZiacQpghdPWlS43ahXaPg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+
+  其常见的选项有：
+
+  -i 指定网卡
+
+  -X –XX 打印十六进制的网络数据包
+
+  -n –nn 不显示ip地址和端口的别名
+
+  -S 以绝对值显示包的ISN号（包序列号）
+
+  常用的过滤条件有如下形式：
+
+  tcpdump –i any ‘port 8888’
+
+  tcpdump –i any ‘tcp port 8888’
+
+  tcpdump –i any ‘tcp src port 8888’
+
+  tcpdump –i any ‘tcp src port 8888 and udp dst port 9999’
+
+  tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
+
+---
+
