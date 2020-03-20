@@ -1,3 +1,5 @@
+
+
 数据结构和算法面试攻略
 ====
 
@@ -12,16 +14,28 @@
 
 主要考察包括基本结构、基本用法、以及一些由这些结构衍生出来和其他算法结合的问题
 
-算法主要包括排序、分治、回溯、动态规划、贪心算法、海量数据问题、越界问题等。
+算法主要包括
+
+1. 排序
+2. 分治
+3. 回溯
+4. 动态规划
+5. 贪心算法
+6. 海量数据问题
+7. 越界问题等。
 
 ---
 
 数组和字符串
 ------
 
-数组字符串的问题通常包括子串问题、回文问题、查找元素，**通常其解法为双指针滑动、回溯、动态规划**。
+数组字符串的问题通常包括子串问题、回文问题、查找元素、匹配问题，**通常其解法为双指针滑动、回溯、动态规划、堆栈**。
 
 ### 子串问题
+
+> **核心解法** 子串问题分为单数组求子串以及给两个数组比较求子串。其核心思想均为动态规划：双数组类似于二维动态规划，一定可以降维为一维，而单数组则可以考虑为一维动态规划，降维为双指针滑动。对于更多个数组的比较，一般还是循环迭代求解吧。
+
+---
 
 * #### 求最大子串和
 
@@ -86,7 +100,6 @@ int maxsequence3(int a[], int len)
           return maxSubString;
       }
   };
-  
   ```
 
 -----
@@ -134,6 +147,213 @@ int maxsequence3(int a[], int len)
 ---
 
 * #### 最小窗口子序列(leetcode 727)
+
+
+
+---
+
+* #### 盛水最多的容器：给定 n 个非负整数 a1，a2，…，an，每个数代表坐标中的一个点 (i, ai) 。在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。（leet code 11)
+
+  形成的区域受限制于较短的那条，同时距离越远则可能的收益越大。因此我们从最左和最右开始检索，采用双指针法，移动较短的那端。
+
+  ```cpp
+   int maxArea(vector<int> &height)
+      {
+          int result = 0;
+          int heightSize = int(height.size());
+          int leftIndex = 0;
+          int rightIndex = heightSize - 1;
+  
+          while (leftIndex != rightIndex)
+          {
+              int tmpHeight;
+              int tmpWidth = rightIndex - leftIndex;
+              
+              //短的一侧向中间移动
+              if (height[leftIndex] < height[rightIndex])
+              {
+                  tmpHeight = height[leftIndex];
+                  leftIndex++;
+              }
+              else
+              {
+                  tmpHeight = height[rightIndex];
+                  rightIndex--;
+              }
+              int tmpResult = tmpWidth * tmpHeight;
+              if (tmpResult > result)
+              {
+                  result = tmpResult;
+              }
+          }
+          return result;
+      }
+  ```
+
+  
+
+---
+
+* #### 最长公共前缀：编写一个函数来查找字符串数组中的最长公共前缀，如果不存在公共前缀，返回空字符串 “”。（leet code 14）
+
+  最简单的办法就是循环迭代查找，该方法时间复杂度和空间复杂度均很低，而且容易想到。除此之外，还可以使用分治的方法，但是结果并没有更优秀
+
+  ```cpp
+  class Solution {
+  public:
+      string longestCommonPrefix(vector<string>& strs) {
+  		int count = 0;
+  		int size = 0;
+  		char c;
+  		bool end = true;
+  		string ret;
+          
+  		if (strs.size() == 0)
+  			return ret;
+  
+  		vector<string>::iterator iter;
+  
+  		iter = strs.begin();
+  		while (iter != strs.end())
+  		{
+  			if (size < (*iter).size())
+  				size = (*iter).size();
+  			iter++;
+  		}
+  
+  		while (end)
+  		{
+  			iter = strs.begin();
+  			c = (*iter)[count];
+  			while ((iter + 1) != strs.end())
+  			{
+  				iter++;
+  				if (c != (*iter)[count])
+  				{
+  					end = false;
+  					break;
+  				}
+  			}
+  
+  			if (end)
+  			{
+  				ret += c;
+  				count++;
+  			}	
+  
+  			if (count >= size)
+  				return ret;
+  		}
+  
+  		return ret;
+      }
+  };
+  ```
+
+---
+
+* #### 电话号码组合问题：给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。（leet code 17)
+
+  对每一位可选可不选，因此采取递归回溯法求解。这里既可以采用深度优先也可以采取广度优先。
+
+  ```cpp
+  // 深度优先，优先考虑每一位选择到结束
+  class Solution
+  {
+      vector<string> result;
+      string digits;
+      unordered_map<char, string> store;
+  
+  public:
+      vector<string> letterCombinations(string digits)
+      {
+          if (digits.empty())
+          {
+              return result;
+          }
+          this->digits = digits;
+          //储存字典
+          store = unordered_map<char, string>{
+              {'2', "abc"}, {'3', "def"}, {'4', "ghi"}, {'5', "jkl"}, {'6', "mno"}, {'7', "pqrs"}, {'8', "tuv"}, {'9', "wxyz"}};
+          dfs("", 0);
+          return result;
+      }
+  
+      void dfs(string resultStr, int index)
+      {
+          int digitsSize = int(this->digits.size());
+          if (digitsSize == index)
+          {
+              result.push_back(resultStr);
+              return;
+          }
+          char targetChar = this->digits[index];
+          string targetStr = store[targetChar];
+          for (auto tmpChar : targetStr)
+          {
+              dfs(resultStr + tmpChar, index + 1);//递归调用
+          }
+          return;
+      }
+  };
+  
+  ```
+
+
+
+
+```cpp
+//广度优先，从第一位开始顺序向后判断，直至输入结束
+class Solution
+{
+    vector<string> result;
+    string digits;
+    unordered_map<char, string> store;
+
+public:
+    vector<string> letterCombinations(string digits)
+    {
+        if (digits.empty())
+        {
+            return result;
+        }
+        this->digits = digits;
+        
+        //储存字典
+        store = unordered_map<char, string>{
+            {'2', "abc"}, {'3', "def"}, {'4', "ghi"}, {'5', "jkl"}, 
+            {'6', "mno"}, {'7', "pqrs"}, {'8', "tuv"}, {'9', "wxyz"}};
+
+        queue<string> workQueue;
+        workQueue.push("");
+        for (auto targetChar : digits)
+        {
+            string targetStr = store[targetChar];
+            int queueSize = int(workQueue.size());
+            
+            //当前层，进行添加字符
+            for (int i = 0; i < queueSize; ++i)
+            {
+                string tmpStr = workQueue.front();
+                workQueue.pop();
+                for (auto tmpChar : targetStr)
+                {
+                    workQueue.push(tmpStr + tmpChar);
+                }
+            }
+        }
+        while (!workQueue.empty())
+        {
+            string tmpStr = workQueue.front();
+            workQueue.pop();
+            result.push_back(tmpStr);
+        }
+        return result;
+    }
+};
+```
+
+---
 
 
 
@@ -309,7 +529,36 @@ int maxsequence3(int a[], int len)
 
 * #### 判断一个整数是否是回文数。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。（leetcode 9)
 
+  本题有两种做法：1.转化为字符串再进行检索 2. 获取一半的整数和另一半比较。第二种空间使用更少，更优
+```cpp
+  class Solution {
+  public:
+      bool isPalindrome(int x) 
+      {
+          // 特殊情况：
+          // 如上所述，当 x < 0 时，x 不是回文数。
+          // 同样地，如果数字的最后一位是 0，为了使该数字为回文，
+          // 则其第一位数字也应该是 0
+          // 只有 0 满足这一属性
+          if(x < 0 || (x % 10 == 0 && x != 0)) 
+          {
+              return false;
+          }
 
+          int revertedNumber = 0;
+          while(x > revertedNumber) 
+          {
+              revertedNumber = revertedNumber * 10 + x % 10;
+              x /= 10;
+          }
+      
+          // 当数字长度为奇数时，我们可以通过 revertedNumber/10 去除处于中位的数字。
+          // 例如，当输入为 12321 时，在 while 循环的末尾我们可以得到 x = 12，revertedNumber = 123，
+          // 由于处于中位的数字不影响回文（它总是与自己相等），所以我们可以简单地将其去除。
+          return x == revertedNumber || x == revertedNumber/10;
+      }
+  };
+```
 
 ---
 
@@ -384,14 +633,12 @@ int maxsequence3(int a[], int len)
 
 -----
 
-* #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。
-  请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
+* #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
   你可以假设 nums1 和 nums2 不会同时为空。（leetcode 4)
-
   本题规定时间复杂度为Log，因此使用二分法可满足要求
 
   ```cpp
-  class Solution {
+class Solution {
   public:
       double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
   		int n = nums1.size();
@@ -429,6 +676,329 @@ int maxsequence3(int a[], int len)
   ```
 
 -----
+
+* #### 三数求和：给你一个包含 *n* 个整数的数组 `nums`，判断 `nums` 中是否存在三个元素 *a，b，c ，*使得 *a + b + c =* 0 ？请你找出所有满足条件且不重复的三元组。（leet code 15)
+
+  * 最简单的做法是三重循环查找，一定可以得解。
+
+  * 在此基础上，对第三次查找其实可以做优化：只需要找指定的数字即可，所以可以通过哈希、排序等方式获得，通过二分法降低时间复杂度
+
+  * 更优的做法是将内部二层循环改为首尾双指针滑动判断：因为内层双循环寻找固定的值，而且要求不重复，因此排序之后从首尾开始判断并滑动得出结果即可。时间复杂度NlogN
+    
+
+```cpp
+class Solution {
+public:
+	vector<vector<int>> threeSum(vector<int>& nums) {
+		int target = 0, val = 0, begin, end;
+        int size = nums.size();
+		vector<int> tmp;
+		vector<int>::iterator beginIter, endIter;
+		vector<vector<int>> ret;
+
+		if (size <= 2)
+			return ret;
+
+		sort(nums.begin(), nums.end());
+		for (int i = 0; i < size - 2; i++)
+		{
+			target = 0 - nums[i];
+			if (target < 0)
+				break;
+
+			beginIter = nums.begin() + i + 1;
+			endIter = nums.end() - 1;
+
+			while (beginIter < endIter)
+			{
+				begin = *beginIter;
+                end = *endIter;
+				val = begin + end;
+				if (val == target)
+				{
+					tmp.push_back(nums[i]);
+					tmp.push_back(*beginIter);
+					tmp.push_back(*endIter);
+					ret.push_back(tmp);
+					tmp.clear();
+					while (beginIter < endIter && *beginIter == begin)
+						beginIter++;
+					while (beginIter < endIter && *endIter == end)
+						endIter--;
+
+				}
+				else if (val < target)
+				{
+					beginIter++;
+				}
+				else
+				{
+					endIter--;
+				}
+			}
+
+			while (i < size - 2 && nums[i] == nums[i + 1])
+				i++;
+		}
+
+		return ret;
+	}
+};
+
+```
+
+---
+
+* #### 最接近的三数之和：给定一个包括 n 个整数的数组 nums 和 一个目标值 target。找出 nums 中的三个整数，使得它们的和与 target 最接近。返回这三个数的和。假定每组输入只存在唯一答案。（leet code 16)
+
+  和上题类似，加一个绝对值判断
+
+  ```cpp
+  class Solution {
+  public:
+      int threeSumClosest(vector<int>& nums, int target) {
+  		int val = 0, begin, end, ret = 0, inTarget, gap;
+  		int size = nums.size();
+  		vector<int>::iterator beginIter, endIter;
+  
+  		if (size <= 2)
+  			return 0;
+  
+  		gap = INT_MAX;
+  
+  		sort(nums.begin(), nums.end());
+  		for (int i = 0; i < size - 2; i++)
+  		{
+  			inTarget = target - nums[i];
+  
+  			beginIter = nums.begin() + i + 1;
+  			endIter = nums.end() - 1;
+  
+  			while (beginIter < endIter)
+  			{
+  				begin = *beginIter;
+  				end = *endIter;
+  				val = begin + end;
+  				if (val == inTarget)
+  				{
+  					return target;
+  				}
+  				else if (val < inTarget)
+  				{
+  					beginIter++;
+  				}
+  				else
+  				{
+  					endIter--;
+  				}
+  
+  				if (abs(val - inTarget) < gap)
+  				{
+  					gap = abs(val - inTarget);
+  					ret = val + nums[i];
+  				}
+  			}
+  		}
+  
+  		return ret; 
+      }
+  };
+  
+  ```
+
+---
+
+* #### 
+
+
+
+
+
+---
+
+### 匹配问题
+
+匹配问题包括正则表达式、括号匹配等等。
+
+---
+
+* #### 正则表达式匹配：给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 ‘.’ 和 ‘\*’ 的正则表达式匹配。‘.’ 匹配任意单个字符，‘*’ 匹配零个或多个前面的那一个元素。所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。（leet code 10)
+  说明:s 可能为空，且只包含从 a-z 的小写字母。p 可能为空，且只包含从 a-z 的小写字母，以及字符 . 和 *。
+
+
+
+**采用从后向前检索的方式进行**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int> > memo;
+    int dfs(const string& s, const string& p, int i, int j) {
+        if (i == s.size()) return j == p.size() ? 1 : -1;
+        if (j == p.size()) return i == s.size() ? 1 : -1;
+        if (memo[i][j] != 0) return memo[i][j];
+        if (j == p.size() - 1 || p[j + 1] != '*') {
+            if (p[j] == '.' || p[j] == s[i]) {
+                memo[i][j] = dfs(s, p, i + 1, j + 1);
+                return memo[i][j];
+            }
+        } else {
+            if (dfs(s, p, i, j + 2) > 0) {
+                memo[i][j] = 1;
+                return memo[i][j];
+            }
+            if (p[j] == '.' || p[j] == s[i]) {
+                bool t = dfs(s, p, i + 1, j + 2) > 0 || dfs(s, p, i + 1, j) > 0;
+                memo[i][j] = t ? 1 : -1;
+                return memo[i][j];
+            }
+        }
+        memo[i][j] = -1;
+        return memo[i][j];
+    }
+    bool isMatch(string s, string p) {
+        s += '#';
+        p += '#';
+        memo = vector<vector<int> >(s.size(), vector<int>(p.size(), 0));
+        return dfs(s, p, 0, 0) > 0;
+    }
+};
+
+```
+
+---
+
+* #### 有效的括号：给定一个只包括 ‘(’，’)’，’{’，’}’，’[’，’]’ 的字符串，判断字符串是否有效。
+  有效字符串需满足：左括号必须用相同类型的右括号闭合。左括号必须以正确的顺序闭合。
+
+  本题采用栈比较容易解决：对左半边括号采取入栈操作，右半边括号和栈顶进行对比，如果不一致则说明有问题
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      bool isValid(string s) 
+      {
+          if (s.size() == 0) 
+              return true;
+          char *stack = (char*)malloc(s.size()); 
+          int top =0;
+          for (int i = 0; s[i]; ++i) 
+          {
+              if (s[i] == '(' || s[i] == '[' || s[i] == '{') 
+                  stack[top++] = s[i];
+              else 
+              {
+                  if ((--top) < 0) //先减减，让top指向栈顶元素             
+                      return false;
+                  if (s[i] == ')' && stack[top] != '(') 
+                      return false;
+                  if (s[i] == ']' && stack[top] != '[') 
+                      return false;
+                  if (s[i] == '}' && stack[top] != '{') 
+                      return false;
+              }
+          }
+          free(stack);
+          return (!top);
+      }
+  };
+  ```
+
+---
+
+* #### 括号生成：给出 n 代表生成括号的对数，请你写出一个函数，使其能够生成所有可能的并且有效的括号组合。（leet code 22)
+
+  对于此类问题回溯法显然可解
+
+  1. 当前左右括号都有大于 0 个可以使用的时候，才产生分支；
+  2. 产生左分支的时候，只看当前是否还有左括号可以使用；
+  3. 产生右分支的时候，还受到左分支的限制，右边剩余可以使用的括号数量一定得在严格大于左边剩余的数量的时候，才可以产生分支；
+  4. 在左边和右边剩余的括号数都等于 0 的时候结算。
+
+  ```cpp
+  class Solution {
+  public:
+      void backtrace(int left, int right, int n, string& s, vector<string>& res) 
+      {
+          if (left == n && right == n) 
+          {
+              res.push_back(s);
+              return;
+          }
+          if (left < n) 
+          {
+              s += "(";
+              backtrace(left + 1, right, n, s, res);
+              s.pop_back();
+          }
+          if (right < left) 
+          {
+              s += ")";
+              backtrace(left, right + 1, n, s, res);
+              s.pop_back();
+          }
+      }
+      vector<string> generateParenthesis(int n) 
+      {
+          vector<string> res;
+          string s;
+          backtrace(0, 0, n, s, res);
+          return res;
+      }
+  };
+  
+  ```
+
+  更优秀的解法为动态规划：
+
+  **核心思想**
+
+  * 对与 `i=n` 的情况，我们考虑整个括号排列中最左边的括号
+
+  * 最左边的括号一定是左括号
+
+  * 和它对应的右括号组成一组完整的括号 `"( )"`，我们认为这一组是相比 `n-1` 增加进来
+
+  * 剩下的括号要么在这一组新增的括号内部，要么在这一组新增括号的外部（右侧）
+
+  * "(" + 【i=p时所有括号的排列组合】 + ")" + 【i=q时所有括号的排列组合】
+
+    其中 `p + q = n-1`，且 `p q` 均为非负整数。
+
+    事实上，当上述 `p` 从 `0` 取到 `n-1`，`q` 从 `n-1` 取到 `0` 后，所有情况就遍历完了。
+
+```cpp
+class Solution {
+public:
+	vector<string> generateParenthesis(int n) 
+    {
+		if (n == 0) return {};
+		if (n == 1) return { "()" };
+		vector<vector<string>> dp(n+1);
+		dp[0] = { "" };
+		dp[1] = { "()" };
+        
+		for (int i = 2; i <= n; i++) 
+        {
+			for (int j = 0; j <i; j++) 
+            {
+				for (string p : dp[j])
+                {
+					for (string q : dp[i - j - 1]) 
+                    {
+						string str = "(" + p + ")" + q;
+						dp[i].push_back(str);
+					}
+                }
+			}
+		}
+		return dp[n];
+	}
+};
+```
+
+---
 
 * ####
 
@@ -579,49 +1149,128 @@ int maxsequence3(int a[], int len)
   ```
 -----
 
-* ####
-  答：
+* #### 删除链表的倒数第N个节点：给定一个链表，删除链表的倒数第 n 个节点，并且返回链表的头结点。（leet code 19)
+  
+  采用双指针滑动：两个指针相距为n，则尾指针到结束了表示首指针为倒数第n个节点
+
+```cpp
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution{
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode *front = head;
+        ListNode *rear = head;
+
+        if(head->next == NULL) 
+            return NULL;
+
+        while(n >= 0)
+        {
+            if(rear == NULL) 
+                return head -> next;
+            rear = rear->next;
+            n --;
+        }
+
+        while(rear)
+        {
+            rear = rear -> next;
+            front = front -> next;
+        }
+        
+        front->next = front->next->next;
+        return head;
+    }
+};
+```
+
+---
+
+* #### k个一组翻转链表：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。
+  如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+
+  为了翻转K个一组，则需要遍历k个，让每一个指针指向前一个节点，然后最前面的节点指向下一组的开始。因此考虑迭代解决
+
+  ```cpp
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* reverseKGroup(ListNode* head, int k) {
+          int d = 0;
+          auto node = head;
+          while (node != NULL) {
+              if (++d >= k) break;
+              node = node->next;
+          }
+          if (d < k) return head;
+          ListNode* prev = NULL;
+          ListNode* curr = head;
+          for (int i = 0; i < k; ++i) {
+              auto node = curr->next;
+              curr->next = prev;
+              prev = curr;
+              curr = node;
+          }
+          head->next = reverseKGroup(curr, k);
+          return prev;
+      }
+  };
+  ```
+
 -----
 
 * ####
-  答：
+  
 -----
 
 队列
 ------
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
 栈
 ------
 * ####
-  答：
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
@@ -629,19 +1278,20 @@ int maxsequence3(int a[], int len)
 堆
 ------
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
+  
 -----
 
 
@@ -650,19 +1300,19 @@ int maxsequence3(int a[], int len)
 树
 ------
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * #### 红黑树的特点和优点
-  答：红黑树能够以O(log2 n)的时间复杂度进行搜索、插入、删除操作。
+  红黑树能够以O(log2 n)的时间复杂度进行搜索、插入、删除操作。
 
   满足下列条件的二叉搜索树是红黑树：
   * 每个结点要么是“红色”，要么是“黑色”
@@ -679,19 +1329,19 @@ int maxsequence3(int a[], int len)
 哈希表
 ------
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
@@ -701,19 +1351,19 @@ int maxsequence3(int a[], int len)
 ------
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
@@ -724,19 +1374,19 @@ int maxsequence3(int a[], int len)
 
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
@@ -748,18 +1398,19 @@ int maxsequence3(int a[], int len)
 
 * ####
   
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
@@ -767,19 +1418,19 @@ int maxsequence3(int a[], int len)
 贪心算法
 ------
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 * ####
-  答：
+  
 -----
 
 
