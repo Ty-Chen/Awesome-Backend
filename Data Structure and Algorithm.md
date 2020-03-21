@@ -633,14 +633,12 @@ public:
 
 -----
 
-* #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
-  你可以假设 nums1 和 nums2 不会同时为空。（leetcode 4)
+* #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。你可以假设 nums1 和 nums2 不会同时为空。（leetcode 4)
   本题规定时间复杂度为Log，因此使用二分法可满足要求
-
   ```cpp
 class Solution {
   public:
-      double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
   		int n = nums1.size();
   		int m = nums2.size();
   
