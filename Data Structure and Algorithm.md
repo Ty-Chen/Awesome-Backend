@@ -1,5 +1,4 @@
 数据结构和算法面试攻略
-====
 
 数据结构主要包括
 1. 数组和字符串
@@ -177,9 +176,93 @@ int maxsequence3(int a[], int len)
 
 -----
 
+* #### 编辑距离：给定两个单词word1和word2，计算出将word1转换成word2所用最少操作数
+
+  本题可采用动态规划求解：dp[i][j]表示word1 i 位和 word2 i位之间的差距，其决定于i - 1和j - 1之间的关系，由于可以插入/删除/替换，因此包括了`dp[i - 1][j]， dp[i][j - 1], dp[i - 1][j - 1]`三种
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      //集合表示 dp[i][j] 对前i个字符进行操作,转换为目标的前j个字符的操作次数 属性->操作次数最小值
+      
+      //集合划分 dp[i][j]的来源  考虑对第i个字符进行的操作是什么
+      //1 插入操作 从而相等 所以先让前i个字符变为j-1字符，然后在第i处插入j代表的字符 即dp[i][j-1]+1
+      //2 删除操作 从而相等 所以先让前i-1个字符变为j字符，然后在第i处删除 即dp[i-1][j]+1
+      //3 替换操作 从而相等 if(i处等于j处 不需要替换) 即dp[i-1][j-1]
+      //                   else 需要替换 dp[i-1][j-1]+1 
+      //上述取个最小值即可
+      int minDistance(string w1, string w2) 
+      {
+          int n = w1.size(), m = w2.size();
+          vector<vector<int>> dp(n+1,vector<int>(m+1));
+          for(int i = 0; i <= n; i++) 
+              dp[i][0] = i;//i个字符转化为0个字符 只能一直删i次
+          
+          for(int j = 0; j <= m; j++) 
+              dp[0][j] = j;//0个字符转化为j个字符 只能一直插入j次
+          
+          for(int i = 1; i <= n; i++)
+          {
+              for(int j = 1; j <= m; j++)
+              {
+                  dp[i][j] = min(dp[i][j-1],dp[i-1][j])+1;//插入 删除 时
+                  dp[i][j] = min(dp[i][j],dp[i-1][j-1] + (w1[i-1]==w2[j-1] ? 0:1));//替换时
+              }
+          }
+          return dp[n][m];
+      }
+  };
+  
+  
+  ```
+
+  
+
+---
+
 * #### 最小覆盖子串：给你一个字符串 S、一个字符串 T，请在字符串 S 里面找出：包含 T 所有字母的最小子串。(leetcode 76)
 
+  本题采用滑动窗口求解：左侧窗口用于收紧大小，右侧用于保证找到所有字母。
 
+  1、我们在字符串 S 中使用双指针中的左右指针技巧，初始化 left = right = 0，把索引闭区间 [left, right] 称为一个「窗口」。
+
+  2、我们先不断地增加 right 指针扩大窗口 [left, right]，直到窗口中的字符串符合要求（包含了 T 中的所有字符）。
+
+  3、此时，我们停止增加 right，转而不断增加 left 指针缩小窗口 [left, right]，直到窗口中的字符串不再符合要求（不包含 T 中的所有字符了）。同时，每次增加 left，我们都要更新一轮结果。
+
+  4、重复第 2 和第 3 步，直到 right 到达字符串 S 的尽头。
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      string minWindow(string s, string t) 
+      {
+          int count[256] = { 0 };
+          for (auto c : t) ++count[c];
+          int len = 0, minLength = s.length();
+          string res;
+          for (int l = 0, r = 0; r < s.length(); ++r) 
+          {
+              if (--count[s[r]] >= 0) 
+                  ++len;
+              while (len == t.length()) 
+              {
+                  if (r - l + 1 <= minLength) 
+                  {
+                      minLength = r - l + 1;
+                      res = s.substr(l, r - l + 1);
+                  }
+                  if (++count[s[l++]] > 0) 
+                      --len;
+              }
+          }
+          return res;        
+      }
+  };
+  
+  ```
 
 ---
 
@@ -293,6 +376,40 @@ int maxsequence3(int a[], int len)
           return ret;
       }
   };
+  ```
+
+---
+
+* #### 柱状图中的最大矩形：给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。求在该柱状图中，能够勾勒出来的矩形的最大面积。（leetcode 84)
+
+  本题和接雨水类似，均可以采用栈的方式去记录一个递增/递减序列从而顺序存储一个值，如果遇到不符合条件则出栈。也可以采用双指针滑动的方式求解。
+
+  ```cpp
+  class Solution {
+  public:
+      int largestRectangleArea(vector<int>& heights) {
+          stack<int> s;
+          s.push(-1);
+          int max_area = 0, height, width;
+          for(int i = 0; i < heights.size(); ++i) {
+              while(s.top() != -1 && heights[i] <= heights[s.top()]) {
+                  height = heights[s.top()];
+                  s.pop();
+                  width = i-s.top()-1;
+                  max_area = max(max_area, width*height);
+              }
+              s.push(i);
+          }
+          while(s.top() != -1) {
+              height = heights[s.top()];
+              s.pop();
+              width = heights.size() - s.top() - 1;
+              max_area = max(max_area, width*height);
+          }
+          return max_area;
+      }
+  };
+  
   ```
 
 ---
@@ -604,9 +721,107 @@ public:
   };
   ```
 
+---
+
+* #### N皇后问题：给定一个整数 n，返回所有不同的 n 皇后问题的解决方案。
+
+  回溯法求解的典型问题。回溯算法就是个多叉树的遍历问题，关键就是在前序遍历和后序遍历的位置做一些操作，算法框架如下：
+
+  def backtrack(...):
+      for 选择 in 选择列表:
+          做选择
+          backtrack(...)
+          撤销选择
+  写 backtrack 函数时，需要维护走过的「路径」和当前可以做的「选择列表」，当触发「结束条件」时，将「路径」记入结果集。
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      void solve(vector<vector<string>>& res, vector<string>& tmp, vector<bool>& cols_, vector<bool>& diag1s_, vector<bool>& diag2s_, int n, int row)
+      {
+          if(row == n)
+          {
+              res.push_back(tmp);
+              return;
+          }
+          for(auto col = 0; col < n; col++)
+          {
+              int ll = row + col;
+              int rr = row - col + n - 1;
+              if (cols_[col] && diag1s_[ll] && diag2s_[rr])
+              {
+                  tmp[row][col] = 'Q';
+                  cols_[col] = false;
+                  diag1s_[ll] = false;
+                  diag2s_[rr] = false;
   
+                  solve(res, tmp, cols_, diag1s_, diag2s_, n, row+1);
+  
+                  tmp[row][col] = '.';
+                  cols_[col] = true;
+                  diag1s_[ll] = true;
+                  diag2s_[rr] = true;
+              }
+          }
+      }
+      
+      vector<vector<string>> solveNQueens(int n) 
+      {
+          vector<vector<string>> res;
+          vector<string> tmp(n, string(n, '.'));
+          vector<bool> cols_(n, true);
+          vector<bool> diag1s_(2*n-1, true);
+          vector<bool> diag2s_(2*n-1, true);
+          solve(res, tmp, cols_, diag1s_, diag2s_, n, 0);
+          return res;
+      }
+      
+  };
+  
+  
+  ```
 
 
+---
+
+* #### 交错字符串：给定三个字符串 s1, s2, s3, 验证 s3 是否是由 s1 和 s2 交错组成的。
+
+  比较容易理解的方式是采取二维数组做动态规划：dp[i][j]表示s1的子串i和s2的子串j是否可以组成s3的子串。但是这种存储方式会比较浪费。更好的方式是采取一维数组dp[i]表示s1的子串和s2的子串在长度为i的情况下是否可以组成s3的子串。但是需要考虑较多情况，比如一个字符串已经结束了等
+
+  ```cpp
+  class Solution {
+  public:
+      bool isInterleave(string s1, string s2, string s3) {
+          const int len1=s1.size();
+          const int len2=s2.size();
+          const int len3=s3.size();
+          if(len1 == 0) return s2 == s3;
+          if(len2 == 0) return s1 == s3;
+          if(len1 + len2 != len3) return false;
+          vector<int> d(len1+1,0);
+          for(int j=0;j<=len2;++j){
+              for(int k=0;k<=len1;++k){
+                  const int i = j + k;
+                  if(j == 0 && k == 0){
+                      d[k] = 1;
+                  }else if(j == 0 && k > 0){
+                      d[k] = d[k - 1] && (s3[i - 1] == s1[k - 1]);
+                  }else if(k == 0 && j > 0){
+                      d[k] = d[k] && s3[i - 1] == s2[j - 1];
+                  }else{
+                      d[k] = d[k - 1] && (s3[i - 1] == s1[k - 1]) || 
+                             d[k] && (s3[i - 1] == s2[j - 1]);
+                  }
+              }
+          }
+          return d[len1];
+      }
+  };
+  
+  ```
+
+  
 
 ---
 
@@ -1534,13 +1749,6 @@ public:
   
   ```
 
-
----
-
-
-
-
-
 -----
 
 链表
@@ -1550,7 +1758,7 @@ public:
 
 * #### 手写代码，实现一个双向循环链表的增删查操作
 
-​```cpp
+```cpp
   struct list_head
   {
   	struct list_head *next, *prev;
@@ -1559,74 +1767,78 @@ public:
   /**
    * 添加链表表项
    * insert a new entry between two known consecutive entries.
-   *
+      *
    * This is only for internal list manipulation where we konw
    * the prev/next entries already
-   */
-  static inline void __list_add(struct list_head *new,
-  			     struct list_head *prev,
-  			     struct list_head *next)
-  {
-  	next->prev = new;
-  	new->next = next;
-  	new->prev = prev;
-  	prev->next = new;
-  }
+      */
+
+    static inline void __list_add(struct list_head *new,
+    			     struct list_head *prev,
+    			     struct list_head *next)
+    {
+    	next->prev = new;
+    	new->next = next;
+    	new->prev = prev;
+    	prev->next = new;
+    }
 
   /**
    * 添加新的链表项
    * list_add    -     add a new entry
    * @new: new entry to be added
    * @head: list head to add it after
-   *
+      *
    * Insert a new entry after the specified head.
    * This is good for implenting stacks.
-   */
-  static inline void list_add(struct list_head *new, struct list_head *head)
-  {
-  	__list_add(new, head, head->next);
-  }
+      */
+
+    static inline void list_add(struct list_head *new, struct list_head *head)
+    {
+    	__list_add(new, head, head->next);
+    }
 
   /**
    * 在尾部添加新链表项
    * list_add_tail    -     add a new entry
    * @new: new entry to be added
    * @head: list head to add it before
-   *
+      *
    * Insert a new entry before the specified head.
    * This is good for implenting queue.
-   */
-  static inline void list_add_tail(struct list_head *new, struct list_head *head)
-  {
-  	__list_add(new, head->prev, head);
-  }
+      */
+
+    static inline void list_add_tail(struct list_head *new, struct list_head *head)
+    {
+    	__list_add(new, head->prev, head);
+    }
 
   /*
    * Delete a list entry by making the prev/next entries
    * point to each other
-   *
+      *
    * This is only for internal list manipulation where we know
    * the prev/next entries already!
-   */
-   static inline void __list_del(struct list_head *prev, struct list_head *next)
-   {
-   	next->prev = prev;
-  	prev->next = next;
-   }
+      */
+      static inline void __list_del(struct list_head *prev, struct list_head *next)
+      {
+      	next->prev = prev;
+
+    	prev->next = next;
+      }
 
   /**
    * list_del    -    delete entry from list
    * @entry: the element to delete from the list
    * Note: list_empty on entry does not return true after this, the entry is
    * in an undefined state.
-   */
-  static inline void list_del(struct list_head *entry)
-  {
-  	__list_del(entry->prev, entry->next);
-  	entry->next = LIST_POSITION1;
-  	entry->prev = LIST_POSITION2;
-  }
+      */
 
+    static inline void list_del(struct list_head *entry)
+    {
+    	__list_del(entry->prev, entry->next);
+    	entry->next = LIST_POSITION1;
+    	entry->prev = LIST_POSITION2;
+    }
 ```
 
 -----
@@ -1634,7 +1846,7 @@ public:
 * #### 两数相加：给出两个非空的链表用来表示两个非负的整数。其中, 它们各自的位数是按照逆序的方式存储的，并且它们的每个节点只能存储一位数字。(leetcode 2)
   直接链表操作即可，考察基本的链表遍历、插入操作
   
-  ```cpp
+```cpp
   /**
    * Definition for singly-linked list.
    * struct ListNode {
@@ -1685,7 +1897,8 @@ public:
           return num->next;
       }
   };
-  ```
+```
+
 -----
 
 * #### 删除链表的倒数第N个节点：给定一个链表，删除链表的倒数第 n 个节点，并且返回链表的头结点。（leet code 19)
@@ -1711,7 +1924,7 @@ public:
 
         if(head->next == NULL) 
             return NULL;
-
+    
         while(n >= 0)
         {
             if(rear == NULL) 
@@ -1719,7 +1932,7 @@ public:
             rear = rear->next;
             n --;
         }
-
+    
         while(rear)
         {
             rear = rear -> next;
@@ -1737,7 +1950,7 @@ public:
 * #### k个一组翻转链表：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
   为了翻转K个一组，则需要遍历k个，让每一个指针指向前一个节点，然后最前面的节点指向下一组的开始。因此考虑迭代解决
 
-  ```cpp
+```cpp
 /**
    * Definition for singly-linked list.
    * struct ListNode {
@@ -1772,56 +1985,59 @@ public:
           return prev;
       }
   };
+
+```
+
+-----
+
+* #### 旋转链表：给定一个链表，旋转链表，将链表每个节点向右移动 k 个位置，其中 k 是非负数。(leet code 61)
+
+  本题的做法是首先迭代找到尾部，然后首尾相连成环，之后遍历K找到新的尾部断开即可
+
+  ```cpp
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* rotateRight(ListNode* head, int k) {
+          if(!head||k==0)return head;
+          ListNode *tail=head;
+          int size=1;
+          while(tail->next){
+              size++;
+              tail=tail->next;
+          }
+          if(k%size==0)return head;
+          //首尾相连，形成环形链表
+          tail->next=head;
+          int m=size-k%size;
+          //tail移动m步，到达新头节点的前驱节点
+          while(m--)tail=tail->next;
+          //tail的next节点为新的头节点，顺便断开环形链表
+          ListNode *res=tail->next;
+          tail->next=nullptr;
+          return res;
+      }
+  };
+  
+  
   ```
 
------
 
-* ####
-  
------
-
-队列
-------
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-
-栈
-------
-* ####
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-
+---
 
 堆
 ------
+
+> 主要用最大最小堆
+
 * ####
-  
 -----
 
 * ####
@@ -1833,25 +2049,339 @@ public:
 -----
 
 * ####
-  
-  
 -----
-
 
 
 
 树
 ------
-* ####
+
+> #### 二叉树的问题主要包括树的遍历、树的构造、二叉搜索树、根据前中或者中后序还原二叉树、二叉树构造B树等。
+
+
+
+* #### 二叉树遍历
   
+  遍历包括前序中序后续，都很简单。写法包括递归和栈，递归太简单不写了，栈下所示
+  
+  ```cpp
+      vector<int> preorderTraversal(TreeNode* root) 
+      {
+          stack<TreeNode*> S;
+          vector<int> v;
+          TreeNode* rt = root;
+          while(rt || S.size())
+          {
+              while(rt)
+              {
+                  S.push(rt->right);
+                  v.push_back(rt->val);
+                  rt=rt->left;
+              }
+              rt=S.top();S.pop();
+          }
+          return v;        
+      }
+  
+  
+      vector<int> postorderTraversal(TreeNode* root) 
+      {
+          stack<TreeNode*> S;
+          vector<int> v;
+          TreeNode* rt = root;
+          while(rt || S.size())
+          {
+              while(rt)
+              {
+                  S.push(rt->left);
+                  v.push_back(rt->val);
+                  rt=rt->right;
+              }
+              rt=S.top();S.pop();
+          }
+          reverse(v.begin(),v.end());
+          return v;
+      }
+  
+      vector<int> inorderTraversal(TreeNode* root) 
+      {
+          stack<TreeNode*> S;
+          vector<int> v;
+          TreeNode* rt = root;
+          while(rt || S.size())
+          {
+              while(rt)
+              {
+                  S.push(rt);
+                  rt=rt->left;
+              }
+              rt=S.top();S.pop();
+              v.push_back(rt->val);
+              rt=rt->right;
+          }
+          return v;        
+      }
+  
+  
+  ```
+  
+  
+
 -----
 
-* ####
+* #### 莫里斯遍历
   
+  [see this](https://www.cnblogs.com/anniekim/archive/2013/06/15/morristraversal.html)
+  
+  可用于恢复二叉搜索树：二叉搜索树中的两个节点被错误地交换。请在不改变其结构的情况下，恢复这棵树。（莫里斯遍历可以实现常数空间完成）
+
+---
+
+* #### 从前序和中序遍历构造二叉树，以及从中序和后续遍历构造二叉树
+
+  第一问的核心思想在于前序的开始为根节点，而中序根节点左侧为左子树，因此可以递归查找：每次由前序判断根，由中序判断左右子树，然后左右子树按照这个规律继续判断，直到没有节点为止
+
+  第二问这里注意两点：后序遍历根节点永远在最后，后序遍历从后往前是先右子树后左子树，由此可得解
+
+  ```cpp
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+          int pos = 0;
+          return buildTree(preorder, pos, inorder, 0, inorder.size() - 1);
+      }
+  
+      TreeNode* buildTree(vector<int>& preorder, int& pos, vector<int>& inorder, int left, int right) 
+      {
+          if (pos >= preorder.size()) 
+              return 0;
+  
+          int i = left;
+  
+          // 搜索到目前的根在中序的位置i
+          for (; i <= right; ++i) 
+          {
+              if (inorder[i] == preorder[pos]) 
+                  break;
+          }
+  
+          // 当前的根为前序的pos
+          TreeNode* node = new TreeNode(preorder[pos]);
+  
+          // 当左边只剩一个就不用递归了
+          if (left <= i - 1) 
+              node->left = buildTree(preorder, ++pos, inorder, left, i - 1);  // 左子树
+  
+          // 当右边只剩一个也是不用了
+          if (i + 1 <= right) 
+              node->right = buildTree(preorder, ++pos, inorder, i + 1, right);  // 右子树
+  
+          return node;
+      }
+  };
+  
+  
+  ```
+
+  
+
+  ```cpp
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      TreeNode *buildTree(vector<int>& inorder, vector<int>& postorder) {
+          int pos = postorder.size() - 1;
+          return buildTree(postorder, pos, inorder, 0, inorder.size() - 1);
+      }
+  
+      TreeNode *buildTree(vector<int>& postorder, int& pos, vector<int>& inorder, int left, int right) 
+      {
+          if (pos >= postorder.size()) 
+              return 0;
+  
+          int i = left;
+  
+          // 搜索到目前的根在中序的位置i
+          for (; i <= right; ++i) 
+          {
+              if (inorder[i] == postorder[pos]) 
+                  break;
+          }
+  
+          // 当前的根为前序的pos
+          TreeNode* node = new TreeNode(postorder[pos]);
+  
+          // 当右边只剩一个就不用递归了
+          if (i + 1 <= right) 
+              node->right = buildTree(postorder, --pos, inorder, i + 1, right);  // 右子树
+  
+          // 当左边只剩一个就不用递归了
+          if (left <= i - 1) 
+              node->left = buildTree(postorder, --pos, inorder, left, i - 1);  // 左子树
+  
+          return node;
+      }
+  
+  };
+  ```
+
+  
+
 -----
 
-* ####
+* #### 不同的二叉搜索树：给定一个整数 n，生成所有由 1 … n 为节点所组成的二叉搜索树。
   
+  对于求全解，回溯法显然可解，由于此问题具有最优子结构，也可以用动态规划求解：依次求解从1到n的结果。设当前在求解k的结果，则可以设根值r为1到k分别的情况，左子树的所有可能情况在dp[r - 1]中，右子树的所有可能情况在dp[k - r]中。备注: 右子树最终拷贝的时候启示值需要从r + 1开始
+  
+  **另外，该种解我们称为卡特兰数**
+  
+  ```cpp
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+  /*  递归版本的拷贝树实现
+      TreeNode *copyTree(TreeNode *root, int delta = 0) {
+          auto nroot = new TreeNode(root->val + delta);
+          if (root->left)
+              nroot->left = copyTree(root->left, delta);
+          if (root->right)
+              nroot->right = copyTree(root->right, delta);
+          return nroot;
+      }
+  */
+      // 非递归版本的拷贝树实现
+      TreeNode *copyTree(TreeNode *root, int delta = 0) {
+          auto nroot = new TreeNode(root->val + delta);
+          queue<TreeNode*> qt;
+          queue<TreeNode*> qo;
+          qo.push(root);
+          qt.push(nroot);
+          while (!qt.empty()) {
+              auto o_root = qo.front();
+              qo.pop();
+              auto t_root = qt.front();
+              qt.pop();
+              if (o_root->left) {
+                  t_root->left = new TreeNode(o_root->left->val + delta);
+                  qo.push(o_root->left);
+                  qt.push(t_root->left);
+              }
+              if (o_root->right) {
+                  t_root->right = new TreeNode(o_root->right->val + delta);
+                  qo.push(o_root->right);
+                  qt.push(t_root->right);
+              }
+          }
+          return nroot;
+      }
+  
+      vector<TreeNode*> generateTrees(int n) {
+          // 使用static变量，节省用例不同用例执行时的重复求解开销
+          static vector<vector<TreeNode*>> dp(1, vector<TreeNode*>(1, NULL));
+          int c_size = n + 1; 
+          int o_size = dp.size();
+          if (c_size > dp.size())
+              dp.resize(c_size);
+  
+          for (int i = o_size; i <= n; i++) { // 升序求解
+              for (int j = 1; j <= i; j++) { // 遍历以不同的数的为根
+                  const auto &left = dp[j - 1];
+                  const auto &right = dp[i - j];
+                  auto &cc = dp[i];
+                  for (const auto left_ptr : left) // 遍历所有可能的左子树
+                      for (const auto right_ptr : right) { // 遍历所有可能的右子树
+                          auto root = new TreeNode(j);
+                          if (j > 1)
+                              root->left = copyTree(left_ptr); // 拷贝左子树
+                          if (i > j)
+                              root->right = copyTree(right_ptr, j); // 拷贝右子树，并加上偏移值
+                          cc.push_back(root);
+                      }
+              }
+          }
+          if (n == 0)
+              return {};
+          return dp[n];
+      }
+  };
+  
+  
+  ```
+  
+  
+
+---
+
+* #### 验证二叉搜索树：给定一个二叉树，判断其是否是一个有效的二叉搜索树。
+
+  作为树的遍历，可以采取前序、中序、后序，可以用递归也可以用堆栈，其实都差不多。引入上下边界
+
+  * 对于树的每个节点 val ，设其上下边界 low , high。(用 long 防止 INT_MAX 溢出 )
+  * 判断根结点时，须满足 low < val < high ，否则返回 false
+  * 判断左节点时，仅 上界 变化 ( 新上界为 high 与 val 较小值。又因 val 必小于 high，故新上界为 val )
+  * 判断右节点时，仅 下界 变化 ( 同理，新下界为 val )
+
+  ```cpp
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution 
+  {
+  public:
+      bool fun(struct TreeNode* root, long low, long high) 
+      {
+          if (root == NULL) 
+              return true;
+          long num = root->val;
+          if (num <= low || num >= high) 
+              return false;
+          return fun(root->left, low, num) && fun(root->right, num, high);
+      }
+      
+      bool isValidBST(struct TreeNode* root)
+      {
+          return fun(root, LONG_MIN, LONG_MAX);
+      }
+  
+  };
+  
+  ```
+
+---
+
+
+
 -----
 
 * #### 红黑树的特点和优点
@@ -1864,52 +2394,268 @@ public:
   * 如果結點是黑色的，那么它的子節點可以是紅色或者是黑色的
   * 结点到其子孙结点的每条简单路径都包含相同数目的“黑色”结点
   * 根结点永远是“黑色”的
------
-
-
-
-
-哈希表
-------
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-
-
+---
 
 排序算法
 ------
 
-* ####
-  
------
+# 一、分类与性能总结
 
-* ####
-  
------
+![img](https:////upload-images.jianshu.io/upload_images/2240277-e008c47f06d3de93?imageMogr2/auto-orient/strip|imageView2/2/w/695/format/webp)
 
-* ####
-  
------
+在本文中对归并排序和基数排序暂不介绍，有兴趣的可以查看本文最后参考资料中的[1]，里面有对这两个算法的详细解释。
 
-* ####
-  
----
+# 二、详细算法介绍
 
-* ####
+## 1 直接插入排序
+
+### 1.1 算法思想
+
+直接插入排序的核心思想就是：**将数组中的所有元素依次跟前面已经排好的元素相比较，如果选择的元素比已排序的元素小，则交换，直到全部元素都比较过。**
+
+![img](https:////upload-images.jianshu.io/upload_images/1156494-936d9f02b6aac880.gif?imageMogr2/auto-orient/strip|imageView2/2/w/594/format/webp)
+
+
+ 因此，从上面的描述中我们可以发现，直接插入排序可以用两个循环完成：
+
+
+
+1. 第一层循环：遍历待比较的所有数组元素
+2. 第二层循环：将本轮选择的元素(selected)与已经排好序的元素(ordered)相比较。如果：selected > ordered，那么将二者交换。
+
+### 1.2 代码实现
+
+
+
+```python
+# 1. 直接插入排序
+def insert_sort(L):
+    # 遍历数组中的所有元素，其中0号索引元素默认已排序，因此从1开始
+    for i in range(1,len(L)):
+        # range(x-1,-1,-1):从x-1倒序循环到0
+        for j in range(i-1,-1,-1):
+            # 将该元素与已排序好的前序数组依次比较，如果该元素小，则交换
+            if L[j]>L[j+1]:
+                L[j], L[j+1] = L[j+1], L[j]
+    return L
+```
+
+## 2 希尔排序
+
+### 2.1 算法思想
+
+希尔排序的核心思想就是：**将待排序数组按照步长gap进行分组，然后将每组的元素利用直接插入排序的方法进行排序；每次将gap折半减小，循环上述操作；当gap=1时，利用直接插入，完成排序。**
+
+![img](https:////upload-images.jianshu.io/upload_images/10390594-bba96b5fbfddeb44.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+
+
+ 因此，从上面的描述中我们可以发现，希尔排序可以用三个循环完成：
+
+
+
+1. 第一层循环：将gap依次折半，对序列进行分组，直到gap=1
+2. 第二、三层循环：也即直接插入排序所需要的两次循环。具体描述见上。
+
+### 1.2 代码实现
+
+
+
+```python
+# 2. 希尔排序
+def shell_sort(L):
+    # 初始化gap值，此处利用序列长度的一半为其赋值
+    gap = len(L) // 2
+    # 第一层循环：依次改变gap值对列表进行分组
+    while(gap >= 1):
+        # 下面：利用直接插入排序的思想对分组数据进行排序，注意分组后下标与gap有关
+        for i in range(gap,len(L)):
+            for j in range(i-gap,-1,-gap):
+                if L[j]>L[j+1]:
+                    L[j], L[j + 1] = L[j + 1], L[j]
+        # while循环条件折半
+        gap = gap // 2
+    return L
+```
+
+## 3 简单选择排序
+
+### 3.1 算法思想
+
+简单选择排序的核心思想就是：**比较+交换**。
+ **1. 从待排序序列中，找到关键字最小的元素；**
+ **2. 如果最小元素不是待排序序列的第一个元素，将其和第一个元素互换；**
+ **3. 从余下的 N - 1 个元素中，找出关键字最小的元素，重复(1)、(2)步，直到排序结束。**
+ 因此，从上面的描述中我们可以发现，简单选择排序可以用两个循环完成：
+
+1. 第一层循环：依次遍历序列当中的每一个元素
+2. 第二层循环：将遍历得到的当前元素依次与余下的元素进行比较，符合最小元素的条件，则交换。
+
+### 3.2 代码实现
+
+
+
+```python
+# 3. 简单选择排序
+def select_sort(L):
+    # 依次遍历序列中的每一个元素
+    for i in range(0,len(L)):
+        # 将当前位置的元素定义此轮循环当中的最小值
+        min = L[i]
+        # 将该元素与剩下的元素依次比较寻找最小元素
+        for j in range(i+1,len(L)):
+            if L[j] < min:
+                L[j], min = min, L[j]
+        # 将比较后得到的真正的最小值赋值给当前位置
+        L[i] = min
+    return L
+```
+
+## 4 堆排序
+
+### 4.1 算法思想
+
+**堆**：本质是一种数组对象。特别重要的一点性质：**任意的叶子节点小于（或大于）它所有的父节点**。对此，又分为大顶堆和小顶堆，大顶堆要求节点的元素都要大于其孩子，小顶堆要求节点元素都小于其左右孩子，两者对左右孩子的大小关系不做任何要求。
+
+利用堆排序，就是基于大顶堆或者小顶堆的一种排序方法。下面，我们通过大顶堆来实现。
+
+堆排序的核心思想就是：
+ **1.首先将序列构建称为大顶堆；**
+
+![img](https:////upload-images.jianshu.io/upload_images/1156494-596eee6397817ca2.png?imageMogr2/auto-orient/strip|imageView2/2/w/664/format/webp)
+
+这样满足了大顶堆那条性质：位于根节点的元素一定是当前序列的最大值
+
+
+**2. 取出当前大顶堆的根节点，将其与序列末尾元素进行交换；**
+
+![img](https:////upload-images.jianshu.io/upload_images/1156494-7e5c63ce1ed48ebf.png?imageMogr2/auto-orient/strip|imageView2/2/w/658/format/webp)
+
+此时序列末尾的元素为已排序的最大值；由于交换了元素，当前位于根节点的堆并不一定满足大顶堆的性质
+
+
+**3. 对交换后的n-1个序列元素进行调整，使其满足大顶堆的性质**
+**4. 重复2.3步骤，直至堆中只有1个元素为止**
+
+
+
+### 4.2 代码实现
+
+
+
+```python
+# 4. 堆排序
+def heap_adjust(L, start, end):
+# start为当前需要调整最大堆的位置，end为调整边界
+    root = start
+    # 执行循环操作：两个任务：1 寻找最大值的下标；2.最大值与父节点交换
+    while True:
+        child = root * 2 + 1
+        if child > end:
+            break
+        # 取较大的子节点
+        if child + 1 <= end and L[child+1] > L[child]:
+            child += 1
+        # 较大的子节点成为父节点
+        if L[child] > L[root]:
+            L[child], L[root] = L[root], L[child]
+            root = child
+        else:
+            break
+
+def heap_sort(L):
+    # 先建立大顶堆，保证最大值位于根节点；并且父节点的值大于叶子结点，从最后一个父节点开始逆序向前循环
+    for start in range(len(L)//2-1, -1, -1):
+        heap_adjust(L, start, len(L)-1)
+    # 执行循环：1.每次取出堆顶元素置于序列的最后    2.调整堆，使其继续满足大顶堆的性质
+    for end in range(len(L)-1, 0, -1):
+        L[0], L[end] = L[end], L[0]
+        heap_adjust(L, 0, end-1)
+    return L
+```
+
+## 5 冒泡排序
+
+### 5.1 算法思想
+
+冒泡排序的思路比较简单，其核心思想为：
+ **1. 将序列当中的左右元素，依次比较，保证右边的元素始终大于左边的元素；**
+ **（ 第一轮结束后，序列最后一个元素一定是当前序列的最大值；）**
+ **2. 对序列当中剩下的n-1个元素再次执行步骤1。**
+ **3. 对于长度为n的序列，一共需要执行n-1轮比较**
+ **（利用while循环可以减少执行次数）**
+
+![img](https:////upload-images.jianshu.io/upload_images/1156494-fef2b2e3edc03289.gif?imageMogr2/auto-orient/strip|imageView2/2/w/600/format/webp)
+
+
+
+### 5.2 代码实现
+
+
+
+```python
+# 5. 冒泡排序
+def bubble_sort(L):
+    # 序列长度为length，需要执行length-1轮交换
+    for i in range(1,len(L)):
+        # 对于每一轮交换，都将序列当中的左右元素进行比较
+        # 每轮交换当中，由于序列最后的元素一定是最大的，因此每轮循环到序列未排序的位置即可
+        for j in range(0, len(L)-i):
+            if L[j]>L[j+1]:
+                L[j], L[j+1] = L[j+1], L[j]
+    return L
+```
+
+## 6 快速排序
+
+### 6.1 算法思想
+
+快速排序的核心思想为：**挖坑填数+分治法**
+ **1. 从序列当中选择一个基准数(pivot)**
+ **（ 在这里我们选择序列当中第一个数最为基准数）**
+ **2. 将序列当中的所有数依次遍历，比基准数大的位于其右侧，比基准数小的位于其左侧。**
+ **3. 重复步骤1.2，直到所有子集当中只有一个元素为止。**
+
+![img](https:////upload-images.jianshu.io/upload_images/1156494-2d150e5550b700fa.gif?imageMogr2/auto-orient/strip|imageView2/2/w/600/format/webp)
+
+
+ 上述过程可用伪代码表示如下：
+**1. i =L; j = R; 将基准数挖出形成第一个坑a[i]。**
+**2. j--由后向前找比它小的数，找到后挖出此数填前一个坑a[i]中。**
+**3. i++由前向后找比它大的数，找到后也挖出此数填到前一个坑a[j]中。**
+**4. 再重复执行2，3二步，直到i==j，将基准数填入a[i]中**
+
+
+
+### 6.2 代码实现
+
+```python
+# 6. 快速排序
+def quick_sort(L, start, end):
+# L：待排序的序列；start排序的开始index,end序列末尾的index
+# 对于长度为length的序列：start = 0;end = length-1
+    if start < end :
+        i, j, pivot = start, end, L[start]
+        while i < j :
+            # 从右开始向左寻找第一个小于pivot的值
+            while L[j] > pivot and i < j :
+                j -= 1
+            # 从左开始向右寻找第一个大于pivot的值
+            while L[i] < pivot and i < j :
+                i += 1
+            # 交换两者的位置
+            L[i], L[j] = L[j], L[i]
+        # 循环结束后，说明 i=j，此时左边的值全都小于pivot,右边的值全都大于pivot
+        # pivot的位置移动正确，那么此时只需对左右两侧的序列调用此函数进一步排序即可
+        # 递归调用函数：依次对左侧序列：从0 ~ i-1//右侧序列：从i+1 ~ end
+        # 左侧序列继续排序
+        quick_sort(L, start, i-1)
+        # 右侧序列继续排序
+        quick_sort(L, i+1, end)
+    return L
+```
+
+
+
 -----
 
 
@@ -2062,6 +2808,7 @@ public:
       }
   };
   ```
+```
 -----
 * #### 两数相除：给定两个整数，被除数 dividend 和除数 divisor。将两数相除，要求不使用乘法、除法和 mod 运算符
   既然不能用乘除法和mod，那使用减法是理所当然的，唯一需要考虑的是边界溢出情况。**但是这种做法会遇到超时问题，因此需要思考更优秀的做法：每次让除数翻倍，多的部分递归去继续从原始除数处理**
@@ -2145,8 +2892,8 @@ public:
   		return subDivide(dividend, divisor, minus);
   	}
   };
-  ```
-  
+```
+
   
 
 -----
