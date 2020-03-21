@@ -1,5 +1,3 @@
-
-
 数据结构和算法面试攻略
 ====
 
@@ -12,7 +10,7 @@
 6. 树
 7. 哈希表
 
-主要考察包括基本结构、基本用法、以及一些由这些结构衍生出来和其他算法结合的问题
+主要考察包括基本结构、基本用法、以及一些由这些结构衍生出来和其他算法结合的问题。队列和栈一般不单独考察，而是作为其他解法（尤其是回溯）中很重要的元素，因此不单独列出。
 
 算法主要包括
 
@@ -23,6 +21,8 @@
 5. 贪心算法
 6. 海量数据问题
 7. 越界问题等。
+
+其中分治、回溯、动态规划、贪心算法多和数据结构(尤其是数组)结合，因此不单独列出来。
 
 ---
 
@@ -69,9 +69,11 @@ int maxsequence3(int a[], int len)
   采取**双指针滑动窗口**求解
 
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
-      int lengthOfLongestSubstring(string s) {
+      int lengthOfLongestSubstring(string s) 
+      {
   
           int start, end, size, maxSubString, len;
           char val; 
@@ -106,7 +108,72 @@ int maxsequence3(int a[], int len)
 
 * #### 串联所有单词的子串：给定一个字符串 **s** 和一些长度相同的单词 **words。**找出 **s** 中恰好可以由 **words** 中所有单词串联形成的子串的起始位置。注意子串要与 **words** 中的单词完全匹配，中间不能有其他字符，但不需要考虑 **words** 中单词串联的顺序。（leetcode 30）
 
+  本题主要在于关注以下几点：
+  （1）完全匹配意味着寻找s中长度为words总长的窗口，采用滑动窗口进行处理
+  （2）由于串联顺序并未规定，因此采用哈希表是很合理的做法
+  （3）哈希表中key为单词，value为words中出现次数，滑动窗口去查找目前有多少个该类单词，如果恰好满足则数量+1
 
+  ```cpp
+  class Solution {
+  public:
+      vector<int> findSubstring(string s, vector<string> &words) {
+          //特殊情况直接排除
+          if(s.empty() || words.empty())
+              return {};
+          
+          //存放结果的数组
+          vector<int> result;
+          
+          //单词数组中的单词的大小，个数，以及总长度
+          int one_word = words[0].size();
+          int word_num = words.size();
+          //int all_len = one_word * word_num;
+          
+          //建立单词->单词个数的映射
+          unordered_map<string, int> m1;
+          for(const auto &w:words)
+              m1[w]++;
+          
+          for(int i = 0; i < one_word; ++i)
+          {
+              //left和rigth表示窗口的左右边界，count用来统计匹配的单词个数
+              int left = i, right = i, count = 0;
+              
+              unordered_map<string, int> m2;
+              
+              //开始滑动窗口
+              while(right + one_word <= s.size())
+              {
+                  //从s中提取一个单词拷贝到w
+                  string w = s.substr(right, one_word);
+                  right += one_word;//窗口右边界右移一个单词的长度
+                  
+                  if(m1.count(w) == 0)
+                  {//此单词不在words中，表示匹配不成功,然后重置单词个数、窗口边界、以及m2
+                      count = 0;
+                      left = right;
+                      m2.clear();
+                  }
+                  else
+                  {//该单词匹配成功，添加到m2中
+                      m2[w]++;
+                      count++;    
+                      while(m2.at(w) > m1.at(w))//一个单词匹配多次，需要缩小窗口，也就是left右移
+                      {
+                          string t_w = s.substr(left, one_word);
+                          count--;
+                          m2[t_w]--;
+                          left += one_word;
+                      }
+                      if(count == word_num)
+                          result.push_back(left);
+                  }
+              }
+          }
+          return result;
+      }
+  };
+  ```
 
 -----
 
@@ -190,18 +257,126 @@ int maxsequence3(int a[], int len)
       }
   ```
 
-  
-
 ---
 
-* #### 最长公共前缀：编写一个函数来查找字符串数组中的最长公共前缀，如果不存在公共前缀，返回空字符串 “”。（leet code 14）
+* #### 接雨水：给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。(leet code 42)
 
-  最简单的办法就是循环迭代查找，该方法时间复杂度和空间复杂度均很低，而且容易想到。除此之外，还可以使用分治的方法，但是结果并没有更优秀
+  遇到这种一般最优解都是双指针首尾滑动，主要难点在于设计怎么计算。这题的核心思想在于：左边比右边高则从右边开始算格子，右边比左边高则从左边开始算格子
 
   ```cpp
   class Solution {
   public:
-      string longestCommonPrefix(vector<string>& strs) {
+      int trap(vector<int>& height) {
+          int begin = 0, end = height.size() - 1, ret = 0;
+          int leftMax = 0, rightMax = 0;
+          while (begin < end)
+          {
+              if (height[begin] < height[end])
+              {
+                  if (height[begin] < leftMax)
+                      ret += leftMax - height[begin];
+                  else
+                      leftMax = height[begin];
+                  
+                  begin++;
+              }
+              else
+              {
+                  if (height[end] < rightMax)
+                      ret += rightMax - height[end];
+                  else
+                      rightMax = height[end];
+                  end--;
+              }
+          }
+            
+          return ret;
+      }
+  };
+  ```
+
+---
+
+* #### 跳跃游戏：给定一个非负整数数组，你最初位于数组的第一个位置。数组中的每个元素代表你在该位置可以跳跃的最大长度。你的目标是使用最少的跳跃次数到达数组的最后一个位置。
+
+  本题可用动态规划：dp[0] = 1 + dp[1]或dp[2], … dp[dp[0]]，倒推至可以一步到达n，则完成，计数在dp之中，然后取最小值返回即可
+
+  ```cpp
+  	int jump(vector<int>& nums) {
+  		int size = nums.size();
+  		int dp[100] = { 0 };
+  
+  		if (size == 1)
+  			return 0;
+  		for (int i = size - 2; i >= 0; i--)
+  		{
+  			if (nums[i] + i >= size - 1)
+  				dp[i] = 1;
+  			else
+  			{
+  				int min = size + 1;
+  				for (int j = 1; j <= nums[i]; j++)
+  				{
+  					if (dp[i + j] >= 0 && dp[i + j] < min)
+  					{
+  						min = dp[i + j] + 1;
+  					}
+  				}
+  				dp[i] = min;
+  			}
+  		}
+  
+  		return dp[0];
+  	}
+  
+  ```
+
+  **第二种方法是从头往后贪心算法求解**
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      int jump(vector<int>& nums) 
+      {
+          int farthest=0;
+          if (size(nums) <= 1) 
+              return 0;
+          int *p = new int[size(nums)];
+          for (int i = 0; i < size(nums); i++) 
+              p[i] = INT_MAX;
+          p[0] = 0;
+          for (int i = 0; i < size(nums); i++)
+          {
+              if ((i + nums[i] + 1) >= size(nums)) 
+                  return p[i] + 1;
+              else if ((i + nums[i])>farthest) 
+              {
+                  for (int j = farthest - i; j <= nums[i]; j++)
+                  {
+                      if (p[i] + 1 < p[i + j]) 
+                          p[i + j] = p[i] + 1;
+                  }
+                  farthest = i + nums[i];
+              }
+          }
+          return -1;
+      }
+  };
+  ```
+
+---
+
+* #### 最长公共前缀：编写一个函数来查找字符串数组中的最长公共前缀，如果不存在公共前缀，返回空字符串。（leet code 14）
+
+  最简单的办法就是循环迭代查找，该方法时间复杂度和空间复杂度均很低，而且容易想到。除此之外，还可以使用分治的方法，但是结果并没有更优秀
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      string longestCommonPrefix(vector<string>& strs) 
+      {
   		int count = 0;
   		int size = 0;
   		char c;
@@ -355,7 +530,81 @@ public:
 
 ---
 
+* #### 删除排序数组中的重复项：给定一个排序数组，你需要在原地删除重复出现的元素，使得每个元素只出现一次，返回移除后数组的新长度。（leet code 26)
 
+
+  对已经排序好的数组，我们采取双指针法，检测到不同的元素再和相同元素第二位进行互换，然后指针前进即可
+
+  ```cpp
+  class Solution {
+  public:
+      int removeDuplicates(vector<int>& nums) {
+          if (nums.size() == 0) 
+              return 0;
+          int i = 0;
+          for (int j = 1; j < nums.size(); j++) 
+          {
+              if (nums[j] != nums[i]) 
+              {
+                  i++;
+                  nums[i] = nums[j];
+              }
+          }
+          return i + 1;
+      }
+  };
+  ```
+
+---
+
+* #### 移除元素：给定一个数组 nums 和一个值 val，你需要原地移除所有数值等于 val 的元素，返回移除后数组的新长度。不要使用额外的数组空间，你必须在原地修改输入数组并在使用 O(1) 额外空间的条件下完成。(leetcode 27)
+
+  本题可以采取和上题类似的策略：对每个重复的元素则赋值给后面不同的元素。但是注意这里需要保证不会重复赋值，因此比较可行的方法是进行节点的交换，注意**每次把不同于val的值赋值在前列就可以完成了**
+
+  ```cpp
+  class Solution {
+  public:
+  	int removeElement(vector<int>& nums, int val) 
+      {
+          if (nums.size() == 0) 
+              return 0;
+          int i = 0;
+          for (int j = 0; j < nums.size(); j++) 
+          {
+              if (nums[j] != val) 
+              {
+                  nums[i] = nums[j];                
+                  i++;
+              }
+          }
+          return i;
+  	}
+  };
+  ```
+
+  **还有没有办法优化性能呢？是有的。上述方法存在一个普遍问题：对于检索过的val的值最后还会检查一遍。但是其实是不需要检查的：我们可以将重复的值替换为末尾的值， 并且不再检查它**
+
+  ```cpp
+  class Solution {
+  public:
+  	int removeElement(vector<int>& nums, int val) {
+          int i = 0;
+          int n = nums.size();
+          while (i < n) {
+              if (nums[i] == val) {
+                  nums[i] = nums[n - 1];
+                  // reduce array size by one
+                  n--;
+              } else {
+                  i++;
+              }
+          }
+          return n;
+  	}
+  };
+  ```
+
+  
 
 
 
@@ -373,10 +622,11 @@ public:
 
   ```cpp
   // 动态规划
-  class Solution {
+  class Solution 
+  {
   public:
-      string longestPalindrome(string s) {
-  
+      string longestPalindrome(string s) 
+      {
           int len = s.size();
   
           if (len == 0 || len == 1)
@@ -415,7 +665,8 @@ public:
       }
   };
   ```
-
+```
+  
   ```cpp
   // 中心扩展法
   // 采用内联追求极限性能
@@ -430,8 +681,9 @@ public:
   		return R - L - 1;
   	}
   
-  class Solution{
-          public:
+  class Solution
+  {
+  public:
       string longestPalindrome(string s) 
   	{
   		if (s.length() < 1)
@@ -453,12 +705,13 @@ public:
   		return s.substr(start, end - start + 1);
   	}
   
-  };
-  ```
+};
+```
 
   ```cpp
   // 马拉车算法
-  class Solution{
+  class Solution
+  {
   public:
   string longestPalindrome(string s)
   {
@@ -531,7 +784,8 @@ public:
 
   本题有两种做法：1.转化为字符串再进行检索 2. 获取一半的整数和另一半比较。第二种空间使用更少，更优
 ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
       bool isPalindrome(int x) 
       {
@@ -575,9 +829,11 @@ public:
   最蠢的是遍历，好点的是采用Map存储和查找，最佳选择为边存储边查找，下面给出后两种的解法。注意后一种改用了[unsorted_map](https://blog.csdn.net/u013354486/article/details/103327973)，会有更好的性能。
 
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
-      vector<int> twoSum(vector<int>& nums, int target) {
+      vector<int> twoSum(vector<int>& nums, int target) 
+      {
           vector<int> result;
           map<int, int> mapNums;
           size_t count = nums.capacity();
@@ -600,13 +856,15 @@ public:
   
           return result;
       }
-  };
+};
   ```
-
+  
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
-      vector<int> twoSum(vector<int>& nums, int target) {
+      vector<int> twoSum(vector<int>& nums, int target) 
+      {
           //Key是数字，value是该数字的index
           unordered_map<int, int> hash;
           vector<int> result;
@@ -637,9 +895,11 @@ public:
 	本题规定时间复杂度为Log，因此使用二分法可满足要求
 
 ```cpp
-class Solution {
+class Solution 
+{
   public:
-    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) 
+    {
   		int n = nums1.size();
   		int m = nums2.size();
   
@@ -685,9 +945,11 @@ class Solution {
     
 
 ```cpp
-class Solution {
+class Solution 
+{
 public:
-	vector<vector<int>> threeSum(vector<int>& nums) {
+	vector<vector<int>> threeSum(vector<int>& nums) 
+    {
 		int target = 0, val = 0, begin, end;
         int size = nums.size();
 		vector<int> tmp;
@@ -752,9 +1014,11 @@ public:
   和上题类似，加一个绝对值判断
 
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
-      int threeSumClosest(vector<int>& nums, int target) {
+      int threeSumClosest(vector<int>& nums, int target) 
+      {
   		int val = 0, begin, end, ret = 0, inTarget, gap;
   		int size = nums.size();
   		vector<int>::iterator beginIter, endIter;
@@ -806,7 +1070,202 @@ public:
 
 ---
 
-* #### 
+* #### 搜索旋转排序数组：假设按照升序排序的数组在预先未知的某个点上进行了旋转。( 例如，数组 [0,1,2,4,5,6,7] 可能变为 [4,5,6,7,0,1,2] )。搜索一个给定的目标值，如果数组中存在这个目标值，则返回它的索引，否则返回 -1
+  
+	 使用二分法解决。本题的难点在于数组进行了一次不确定位置的旋转，但是旋转后依然是两部分升序的组合，这就存在一个必然性：旋转点假设为a和b之间，则b成为了新数组第一个数，a成为了末尾数。因为b大于a和a之前的数，所以我们判断中间点如果小于b，则证明旋转后的片段小于一半，即在左边，否则在右边。
+
+
+
+```cpp
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int left = 0;
+        int right = nums.size() - 1;
+        int mid = left + (right-left)/2;
+
+        while(left <= right){
+            if(nums[mid] == target){
+                return mid;
+            }
+
+            if(nums[left] <= nums[mid]){  //左边升序
+                if(target >= nums[left] && target <= nums[mid]){//在左边范围内
+                    right = mid - 1;
+                }else{//只能从右边找
+                    left = mid+1;
+                }
+
+            }else{ //右边升序
+                if(target >= nums[mid] && target <= nums[right]){//在右边范围内
+                    left = mid +1;
+                }else{//只能从左边找
+                    right = mid-1;
+                }
+
+            }
+            mid = left + (right-left)/2;
+        }
+
+        return -1;  //没找到
+    }
+};
+```
+
+---
+
+* #### 有效的数独(leet code 36)
+
+  本题可以采用暴力遍历法，这样空间成本小，但是时间成本较高。如果作为平衡的话，采用三个数组记录每一位所在位置的值，一次遍历即可解决三个条件的判断，但是空间成本较高
+
+  ```cpp
+  class Solution 
+  {
+  public:
+      bool isValidSudoku(vector<vector<char>>& board) 
+      {
+          int cols[9][9] = {0}, rows[9][9] = {0}, blocks[9][9] = {0};
+          for(int i = 0; i < 9; i++)
+          {
+              for(int j = 0; j < 9; j++)
+              {
+                  if(board[i][j] != '.')
+                  {
+                      int data = board[i][j] - '0';
+                      cols[i][data - 1]++;
+                      rows[j][data - 1]++;
+                      blocks[(i / 3) * 3 + j / 3][data - 1]++;
+                      if(cols[i][data - 1] > 1 || rows[j][data - 1] > 1
+                          || blocks[(i / 3) * 3+ j / 3][data - 1] > 1)
+                      {
+                          return false;
+                      }
+                  }
+              }
+          }
+          return true;    
+      }
+  };
+  ```
+
+---
+
+* #### 解数独：编写一个程序，通过已填充的空格来解决数独问题。
+
+  本题主要是采取回溯法解决，选择最少空位的行、列、块，然后进行填入，如果出现问题则回溯
+
+  ```cpp
+  class Solution {
+  public:
+      // line, column, block 分别存储每行、每列、每宫中可用的数字
+      vector<set<int>> line, column, block;
+      
+      //哈希更新每行/列/宫中可以使用的数字
+      void update( vector<vector<char>>& board){
+          set<int> compare = {1,2,3,4,5,6,7,8,9};
+          //a 行；b 列；c 宫
+          for( int i = 0; i < 9; i++)
+              line.push_back( compare), column.push_back( compare), block.push_back( compare); 
+          
+          for( int i = 0; i < 9; i++)
+              for( int j = 0; j < 9; j++)
+                  if( board[i][j] != '.'){
+                      int t = board[i][j] - '0';
+                      line[i].erase( t),  column[j].erase(t), block[i / 3 + j / 3 * 3].erase(t); 
+                  }
+          
+          return ;
+      }
+      
+      //检查该位置处字符是否可以放到该处
+      bool check( vector<vector<char>>& board, const int& i, const int& j, int num){
+          if( line[i].find( num) != line[i].end()
+           && column[j].find( num) != column[j].end()
+           && block[i/3 + j/3*3].find( num) != block[i/3 + j/3*3].end())
+              return true;
+          return false;
+      }
+      
+      //标记
+      int flag = 0;
+      
+      //dfs + 回溯
+      void dfs( vector<vector<char>>& board, int count){
+          if( count == 81){
+              flag = 1;
+              return ;
+          }
+              
+  
+          int i = count / 9, j = count % 9;
+          
+          if( board[i][j] == '.'){
+              //检查 1 ～ 9 中数字哪一个可以放入该位置
+              for( int k = 1; k < 10; k++)
+                  if( check( board, i, j, k)){
+                      line[i].erase( k), column[j].erase( k), block[ i /3 + j/3*3].erase( k);
+                      
+                      board[i][j] = k + '0';
+                      dfs( board, count + 1);
+                      
+                      if( !flag){
+                          line[i].insert( k), column[j].insert( k), block[ i /3 + j/3*3].insert( k);
+                          board[i][j] = '.';
+                      }
+                      else
+                          return ;
+                  }
+          }
+          else
+              dfs( board, count + 1);
+              
+          return ;
+      }
+      
+      void solveSudoku(vector<vector<char>>& board) {
+          update( board);
+          //show( line, column, block);
+          dfs(board, 0);
+      }
+  };
+      
+  
+  ```
+
+---
+
+* #### 缺失的第一个正数：给定一个未排序的整数数组，找出其中没有出现的最小的正整数(leet code 41)
+
+  本题有一个隐藏的结论：**数组长度为N，则最小正整数一定小于等于N+1**，介于此，我们可以用数组当哈希表用来存储状态，然后据此遍历一遍即可
+
+  ```cpp
+  class Solution {
+  public:
+      int firstMissingPositive(vector<int>& nums) {
+          int ret = 1;        
+          int size = nums.size();
+          int mapNums[size + 2] = {0};
+  
+          for (int i = 0; i < nums.size(); i++)
+          {
+              int tmp = nums[i];
+              if (tmp < size + 2 && tmp > 0)
+                  mapNums[tmp] = 1;
+          }
+  
+          while (1)
+          {
+              if (mapNums[ret] == 1)
+                  ret++;
+              else
+                  return ret;
+          }
+      }
+  };
+  
+  ```
+
+---
 
 
 
@@ -828,24 +1287,32 @@ public:
 **采用从后向前检索的方式进行**
 
 ```cpp
-class Solution {
+class Solution 
+{
 public:
     vector<vector<int> > memo;
-    int dfs(const string& s, const string& p, int i, int j) {
+    int dfs(const string& s, const string& p, int i, int j) 
+    {
         if (i == s.size()) return j == p.size() ? 1 : -1;
         if (j == p.size()) return i == s.size() ? 1 : -1;
         if (memo[i][j] != 0) return memo[i][j];
-        if (j == p.size() - 1 || p[j + 1] != '*') {
-            if (p[j] == '.' || p[j] == s[i]) {
+        if (j == p.size() - 1 || p[j + 1] != '*') 
+        {
+            if (p[j] == '.' || p[j] == s[i]) 
+            {
                 memo[i][j] = dfs(s, p, i + 1, j + 1);
                 return memo[i][j];
             }
-        } else {
-            if (dfs(s, p, i, j + 2) > 0) {
+        } 
+        else 
+        {
+            if (dfs(s, p, i, j + 2) > 0) 
+            {
                 memo[i][j] = 1;
                 return memo[i][j];
             }
-            if (p[j] == '.' || p[j] == s[i]) {
+            if (p[j] == '.' || p[j] == s[i]) 
+            {
                 bool t = dfs(s, p, i + 1, j + 2) > 0 || dfs(s, p, i + 1, j) > 0;
                 memo[i][j] = t ? 1 : -1;
                 return memo[i][j];
@@ -854,7 +1321,9 @@ public:
         memo[i][j] = -1;
         return memo[i][j];
     }
-    bool isMatch(string s, string p) {
+    
+    bool isMatch(string s, string p) 
+    {
         s += '#';
         p += '#';
         memo = vector<vector<int> >(s.size(), vector<int>(p.size(), 0));
@@ -866,10 +1335,41 @@ public:
 
 ---
 
-* #### 有效的括号：给定一个只包括 ‘(’，’)’，’{’，’}’，’[’，’]’ 的字符串，判断字符串是否有效。
-  有效字符串需满足：左括号必须用相同类型的右括号闭合。左括号必须以正确的顺序闭合。
+* #### 通配符匹配：给定一个字符串 (s) 和一个字符模式 § ，实现一个支持 ‘?’ 和 ‘`*`’ 的通配符匹配。‘?’ 可以匹配任何单个字符。‘`*`’ 可以匹配任意字符串（包括空字符串）。两个字符串完全匹配才算匹配成功。
 
-  本题采用栈比较容易解决：对左半边括号采取入栈操作，右半边括号和栈顶进行对比，如果不一致则说明有问题
+  本题中？其实不用在意，s和p指针自增略过即可，但是`\*`需要着重考虑，因为可以代替任意长度。这里有一个容易出现的误区，如果匹配让`\*`后一个字符等于s中判断位置之后第一个值则会出现错误。所以这里需要记录星号所在位置，然后继续自增s匹配下一处相同的值
+
+  ```cpp
+  class Solution {
+  public:
+      bool isMatch(string s, string p) {
+          int i = 0, j = 0, iStar = -1, jStar = -1, m = s.size(), n = p.size();
+          while (i < m) {
+              if (j < n && (s[i] == p[j] || p[j] == '?')) {
+                  ++i, ++j;
+              } else if (j < n && p[j] == '*') {
+                  iStar = i;
+                  jStar = j++;
+              } else if (iStar >= 0) {
+                  i = ++iStar;
+                  j = jStar + 1;
+              } else return false;
+          }
+          while (j < n && p[j] == '*') ++j;//去除多余星号
+          return j == n;
+      }
+  };
+  
+  ```
+
+---
+
+* #### 有效的括号：给定一个只包括 ‘(’，’)’，’{’，’}’，’[’，’]’ 的字符串，判断字符串是否有效。
+  
+
+有效字符串需满足：左括号必须用相同类型的右括号闭合。左括号必须以正确的顺序闭合。
+
+本题采用栈比较容易解决：对左半边括号采取入栈操作，右半边括号和栈顶进行对比，如果不一致则说明有问题
 
   ```cpp
   class Solution 
@@ -915,7 +1415,8 @@ public:
   4. 在左边和右边剩余的括号数都等于 0 的时候结算。
 
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
       void backtrace(int left, int right, int n, string& s, vector<string>& res) 
       {
@@ -948,26 +1449,29 @@ public:
   
   ```
 
-  更优秀的解法为动态规划：
+  
 
-  **核心思想**
+更优秀的解法为动态规划：
 
-  * 对与 `i=n` 的情况，我们考虑整个括号排列中最左边的括号
+**核心思想**
 
-  * 最左边的括号一定是左括号
-
-  * 和它对应的右括号组成一组完整的括号 `"( )"`，我们认为这一组是相比 `n-1` 增加进来
-
-  * 剩下的括号要么在这一组新增的括号内部，要么在这一组新增括号的外部（右侧）
-
-  * "(" + 【i=p时所有括号的排列组合】 + ")" + 【i=q时所有括号的排列组合】
-
-    其中 `p + q = n-1`，且 `p q` 均为非负整数。
-
+* 对与 `i=n` 的情况，我们考虑整个括号排列中最左边的括号
+  
+* 最左边的括号一定是左括号
+  
+* 和它对应的右括号组成一组完整的括号 `"( )"`，我们认为这一组是相比 `n-1` 增加进来
+  
+* 剩下的括号要么在这一组新增的括号内部，要么在这一组新增括号的外部（右侧）
+  
+* "(" + 【i=p时所有括号的排列组合】 + ")" + 【i=q时所有括号的排列组合】
+  
+  其中 `p + q = n-1`，且 `p q` 均为非负整数。
+  
     事实上，当上述 `p` 从 `0` 取到 `n-1`，`q` 从 `n-1` 取到 `0` 后，所有情况就遍历完了。
 
 ```cpp
-class Solution {
+class Solution 
+{
 public:
 	vector<string> generateParenthesis(int n) 
     {
@@ -975,30 +1479,65 @@ public:
 		if (n == 1) return { "()" };
 		vector<vector<string>> dp(n+1);
 		dp[0] = { "" };
-		dp[1] = { "()" };
+		dp[1] = { "()" };	
         
-		for (int i = 2; i <= n; i++) 
+        for (int i = 2; i <= n; i++) 
         {
-			for (int j = 0; j <i; j++) 
+            for (int j = 0; j <i; j++) 
             {
-				for (string p : dp[j])
+                for (string p : dp[j])
                 {
-					for (string q : dp[i - j - 1]) 
+                    for (string q : dp[i - j - 1]) 
                     {
-						string str = "(" + p + ")" + q;
-						dp[i].push_back(str);
-					}
+                        string str = "(" + p + ")" + q;
+                        dp[i].push_back(str);
+                    }
                 }
-			}
-		}
-		return dp[n];
+            }
+        }
+        return dp[n];
 	}
 };
+```
+---
+
+* #### 最长有效括号：给定一个只包含 ‘(’ 和 ‘)’ 的字符串，找出最长的包含有效括号的子串的长度。(leet code 32)
+
+  **本题可以采用动态规划解决，即每次向后滑动，然后若出现（）则+2， 若出现))则需要检测))之前最优子结构前是否有多的(，有的话则+2**
+
+  ```cpp
+  class Solution {
+  public:
+      int longestValidParentheses(string s) {
+          if (s.size() == 0)
+              return 0;
+  
+          int maxans = 0;
+          int dp[s.length()] = {0};
+          for (int i = 1; i < s.length(); i++) 
+          {
+              if (s[i] == ')') 
+              {
+                  if (s[i - 1] == '(') 
+                  {
+                      dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
+                  } else if (i - dp[i - 1] > 0 && s[i - dp[i - 1] - 1] == '(') 
+                  {
+                      dp[i] = dp[i - 1] + ((i - dp[i - 1]) >= 2 ? dp[i - dp[i - 1] - 2] : 0) + 2;
+                  }
+                  maxans = max(maxans, dp[i]);
+              }
+          }
+          return maxans;        
+      }
+  };
+  
+  ```
 ```
 
 ---
 
-* ####
+
 
 
 
@@ -1011,7 +1550,7 @@ public:
 
 * #### 手写代码，实现一个双向循环链表的增删查操作
 
-```cpp
+​```cpp
   struct list_head
   {
   	struct list_head *next, *prev;
@@ -1104,9 +1643,11 @@ public:
    *     ListNode(int x) : val(x), next(NULL) {}
    * };
    */
-  class Solution {
+  class Solution 
+  {
   public:
-      ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+      ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) 
+      {
           int count = 0;
           ListNode *num = new ListNode(-1);
           ListNode *ptr = num;
@@ -1160,9 +1701,11 @@ public:
  *     ListNode(int x) : val(x), next(NULL) {}
  * };
  */
-class Solution{
+class Solution
+{
 public:
-    ListNode* removeNthFromEnd(ListNode* head, int n) {
+    ListNode* removeNthFromEnd(ListNode* head, int n)     
+    {
         ListNode *front = head;
         ListNode *rear = head;
 
@@ -1191,13 +1734,11 @@ public:
 
 ---
 
-* #### k个一组翻转链表：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。
-  如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
-
+* #### k个一组翻转链表：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
   为了翻转K个一组，则需要遍历k个，让每一个指针指向前一个节点，然后最前面的节点指向下一组的开始。因此考虑迭代解决
 
   ```cpp
-  /**
+/**
    * Definition for singly-linked list.
    * struct ListNode {
    *     int val;
@@ -1205,19 +1746,23 @@ public:
    *     ListNode(int x) : val(x), next(NULL) {}
    * };
    */
-  class Solution {
+  class Solution 
+  {
   public:
-      ListNode* reverseKGroup(ListNode* head, int k) {
+      ListNode* reverseKGroup(ListNode* head, int k) 
+      {
           int d = 0;
           auto node = head;
-          while (node != NULL) {
+          while (node != NULL) 
+          {
               if (++d >= k) break;
               node = node->next;
           }
           if (d < k) return head;
           ListNode* prev = NULL;
           ListNode* curr = head;
-          for (int i = 0; i < k; ++i) {
+          for (int i = 0; i < k; ++i) 
+          {
               auto node = curr->next;
               curr->next = prev;
               prev = curr;
@@ -1362,73 +1907,9 @@ public:
 
 * ####
   
------
-
-
-
-回溯法
-------
-
-
+---
 
 * ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-
-
-动态规划
-------
-
-​	动态规划是一种以空间换时间的做法，相对于回溯法穷尽所有来说，动态规划更类似于剪枝后的优化型回溯，但是要更为优秀：因为不用考虑前面过多的部属，而只用考虑当前状态上一状态即可。有一个很有用的判断方法：画出回溯的树形，如果有重复子结构，一般说明回溯不是最优，可以尝试动态规划。否则回溯就是最优解了。
-
-* ####
-  
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-
-
-贪心算法
-------
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
------
-
-* ####
-  
 -----
 
 
@@ -1533,22 +2014,23 @@ public:
 -----
 
 * ####
-  答：
+  
 
 -----
 
 * ####
-  答：
+  
 
 -----
 
 * ####
-  答：
+  
 
-
+---
 
 * 
-  
+---
+
 越界问题
 -----
 * #### 两个数相乘，小数点后位数没有限制，请写一个高精度算法。
@@ -1562,11 +2044,14 @@ public:
   边界条件的考虑而已，记住就好。对接近最大正数和最小负数单独考虑，其他随意。
   
   ```cpp
-  class Solution {
+  class Solution 
+  {
   public:
-      int reverse(int x) {
+      int reverse(int x) 
+      {
           int rev = 0;
-          while (x != 0) {
+          while (x != 0) 
+          {
               int pop = x % 10;
               x /= 10;
               if (rev > INT_MAX/10 || (rev == INT_MAX / 10 && pop > 7)) return 0;
@@ -1578,7 +2063,90 @@ public:
   };
   ```
 -----
-* ####
-  答：
+* #### 两数相除：给定两个整数，被除数 dividend 和除数 divisor。将两数相除，要求不使用乘法、除法和 mod 运算符
+  既然不能用乘除法和mod，那使用减法是理所当然的，唯一需要考虑的是边界溢出情况。**但是这种做法会遇到超时问题，因此需要思考更优秀的做法：每次让除数翻倍，多的部分递归去继续从原始除数处理**
+  
+  1. 避免溢出和对于被除数和除数一些特殊判定以加快运算速度和避免出错
+  2. 采用被除数减除数来做到除的效果
+  3. 采用除数自增翻倍的思想加快减法的速度
+  4. 考虑到符号和可能的溢出，这里将除数和被除数转换为负数进行运算，同时传递运算结果的符号
+  
+  ```cpp
+  class Solution {
+  public:
+  	int subDivide(int dividend, int divisor, bool minus)
+  	{
+  		int i = 0, times = 1;
+  		int originDivisor = divisor;
+  		while (dividend <= divisor && dividend <= 0)
+  		{
+  			dividend -= divisor;
+   			i += times;           
+              if (dividend >= divisor)
+              {
+                  break;
+              }
+  			divisor += divisor;
+  			times += times;
+  		}
+  
+  		if (dividend > originDivisor)
+  		{
+  			if (minus)
+  				return -i;
+  			else
+  				return i;
+  		}
+  		else
+  		{
+  			if (minus)
+  				return -i + subDivide(dividend, originDivisor, minus);
+  			else
+  				return i + subDivide(dividend, originDivisor, minus);
+  		}
+  	}
+  
+  	int divide(int dividend, int divisor) {
+  		int i = 0, times = 1, left = 0;
+  		bool minus = false;
+  		
+  		if (dividend == INT_MIN)
+  		{
+  			if (divisor == -1)
+  				return INT_MAX;
+  			else if (divisor == 1)
+  				return INT_MIN;
+  			else if (divisor == INT_MIN)
+  				return 1;
+  		}
+  		else if (divisor == INT_MIN)
+  			return 0;
+          else if (divisor == 1)
+              return dividend;
+          else if (divisor == -1)
+              return -dividend;
+  
+  		if (dividend < 0 && divisor > 0)
+  		{
+  			minus = true;
+  			divisor = -divisor;
+  		}
+  		else if (dividend > 0 && divisor < 0)
+  		{
+  			minus = true;
+  			dividend = -dividend;
+  		}
+          else if (dividend > 0 && divisor > 0)
+          {
+   			divisor = -divisor;
+  			dividend = -dividend;                        
+          }
+  
+  		return subDivide(dividend, divisor, minus);
+  	}
+  };
+  ```
+  
+  
 
 -----
