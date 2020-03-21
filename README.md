@@ -10,6 +10,5 @@
 * ## [网络协议](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Networking.md "网络协议")
 * ## [数据库](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Database.md)
 * ## [设计模式（未完成）](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Design%20Pattern.md "Design Pattern")
-* ## [分布式系统（未完成）](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Distribute%20System.md "Distribute System")
 * ## [容器及自动化运营（未完成）]()
 * ## [微服务（未完成）]()
