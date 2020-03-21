@@ -665,7 +665,7 @@ public:
       }
   };
   ```
-```
+
   
   ```cpp
   // 中心扩展法
@@ -705,8 +705,8 @@ public:
   		return s.substr(start, end - start + 1);
   	}
   
-};
-```
+  };
+  ```
 
   ```cpp
   // 马拉车算法
@@ -783,7 +783,7 @@ public:
 * #### 判断一个整数是否是回文数。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。（leetcode 9)
 
   本题有两种做法：1.转化为字符串再进行检索 2. 获取一半的整数和另一半比较。第二种空间使用更少，更优
-```cpp
+  ```cpp
   class Solution 
   {
   public:
@@ -812,7 +812,7 @@ public:
           return x == revertedNumber || x == revertedNumber/10;
       }
   };
-```
+  ```
 
 ---
 
@@ -1533,7 +1533,7 @@ public:
   };
   
   ```
-```
+
 
 ---
 
