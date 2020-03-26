@@ -76,7 +76,7 @@ MySQL是关系型数据库中最常用的数据库，也是面试最常见的问
   * Server 层包括连接器、查询缓存、分析器、优化器、执行器等，涵盖 MySQL 的大多数核心服务功能，以及所有的内置函数（如日期、时间、数学和加密函数等），所有跨存储引擎的功能都在这一层实现，比如存储过程、触发器、视图等。
   * 存储引擎层负责数据的存储和提取。其架构模式是插件式的，支持 InnoDB、MyISAM、Memory 等多个存储引擎。现在最常用的存储引擎是 InnoDB，它从 MySQL 5.5.5 版本开始成为了默认存储引擎。
 
-  ![img](E:\doc\Awesome-Backend\0d2070e8f84c4801adbfa03bda1f98d9.png)
+  ![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/0d2070e8f84c4801adbfa03bda1f98d9.png)
 
 ---
 
@@ -105,13 +105,13 @@ MySQL是关系型数据库中最常用的数据库，也是面试最常见的问
 
 * #### mysql有关权限的表都有哪几个
   
-MySQL服务器通过权限表来控制用户对数据库的访问，权限表存放在mysql数据库里，由mysql_install_db脚本初始化。这些权限表分别user，db，table_priv，columns_priv和host。下面分别介绍一下这些表的结构和内容：
+	MySQL服务器通过权限表来控制用户对数据库的访问，权限表存放在mysql数据库里，由mysql_install_db脚本初始化。这些权限表分别user，db，table_priv，columns_priv和host。下面分别介绍一下这些表的结构和内容：
   
-  user权限表：记录允许连接到服务器的用户帐号信息，里面的权限是全局级的。
-  db权限表：记录各个帐号在各个数据库上的操作权限。
-  table_priv权限表：记录数据表级的操作权限。
-  columns_priv权限表：记录数据列级的操作权限。
-  host权限表：配合db权限表对给定主机上数据库级操作权限作更细致的控制。这个权限表不受GRANT和REVOKE语句的影响。
+  * user权限表：记录允许连接到服务器的用户帐号信息，里面的权限是全局级的。
+  * db权限表：记录各个帐号在各个数据库上的操作权限。
+  * table_priv权限表：记录数据表级的操作权限。
+  * columns_priv权限表：记录数据列级的操作权限。
+  * host权限表：配合db权限表对给定主机上数据库级操作权限作更细致的控制。这个权限表不受GRANT和REVOKE语句的影响。
 
 ---
 
@@ -138,11 +138,9 @@ MySQL服务器通过权限表来控制用户对数据库的访问，权限表存
   
   当事务提交(Commit)时，必须先将事务的所有日志写入到**redo(重做日志文件)**中，进行持久化，待事务的commit完成才算完成。这也是WAL技术（Write-Ahead Logging）。redo log 是 InnoDB 引擎特有的日志，而 Server 层也有自己的日志，称为 binlog（归档日志）
   
-  
-  
   下图是redo log的结构图
   
-  ![img](E:\doc\Awesome-Backend\16a7950217b3f0f4ed02db5db59562a7.png)
+  ![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/16a7950217b3f0f4ed02db5db59562a7.png)
   
   write pos 是当前记录的位置，一边写一边后移，写到第 3 号文件末尾后就回到 0 号文件开头。checkpoint 是当前要擦除的位置，也是往后推移并且循环的，擦除记录前要把记录更新到数据文件。
   
@@ -167,7 +165,7 @@ MySQL服务器通过权限表来控制用户对数据库的访问，权限表存
   * 执行器生成这个操作的 binlog，并把 binlog 写入磁盘。
   * 执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成。
   
-  ​	![img](E:\doc\Awesome-Backend\2e5bff4910ec189fe1ee6e2ecc7b4bbe.png)
+  ​	![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/2e5bff4910ec189fe1ee6e2ecc7b4bbe.png)
 
 ---
 
