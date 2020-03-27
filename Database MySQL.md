@@ -445,16 +445,16 @@ MyISAM与InnoDB区别
   * 主键索引: 数据列不允许重复，不允许为NULL，一个表只能有一个主键。
 
   * 唯一索引: 数据列不允许重复，允许为NULL值，一个表允许多个列创建唯一索引。
-  * 可以通过 ALTER TABLE table_name ADD UNIQUE (column); 创建唯一索引
+    * 可以通过 ALTER TABLE table_name ADD UNIQUE (column); 创建唯一索引
   
-  * 可以通过 ALTER TABLE table_name ADD UNIQUE (column1,column2); 创建唯一组合索引
+    * 可以通过 ALTER TABLE table_name ADD UNIQUE (column1,column2); 创建唯一组合索引
   
   * 普通索引: 基本的索引类型，没有唯一性的限制，允许为NULL值。
-  * 可以通过ALTER TABLE table_name ADD INDEX index_name (column);创建普通索引
-  * 可以通过ALTER TABLE table_name ADD INDEX index_name(column1, column2, column3);创建组合索引
+    * 可以通过ALTER TABLE table_name ADD INDEX index_name (column);创建普通索引
+    * 可以通过ALTER TABLE table_name ADD INDEX index_name(column1, column2, column3);创建组合索引
   
   * 全文索引： 是目前搜索引擎使用的一种关键技术。
-  * 可以通过ALTER TABLE table_name ADD FULLTEXT (column);创建全文索引
+    * 可以通过ALTER TABLE table_name ADD FULLTEXT (column);创建全文索引
 
 ------
 
