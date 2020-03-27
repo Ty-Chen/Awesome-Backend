@@ -301,9 +301,9 @@ MySQL是关系型数据库中最常用的数据库，也是面试最常见的问
   CHAR会根据需要使用空格进行填充方便比较。
 	
   CHAR适合存储很短的字符串，或者所有值都接近同一个长度。
-  
+
   CHAR存储的内容超出设置的长度时，内容同样会被截断。
-  
+
   使用策略：
 
    a. 对于经常变更的数据来说，CHAR比VARCHAR更好，因为CHAR不容易产生碎片。
@@ -442,34 +442,28 @@ MyISAM与InnoDB区别
 ------
 
 * #### 索引有哪几种类型？
-  主键索引: 数据列不允许重复，不允许为NULL，一个表只能有一个主键。
+  * 主键索引: 数据列不允许重复，不允许为NULL，一个表只能有一个主键。
 
-  唯一索引: 数据列不允许重复，允许为NULL值，一个表允许多个列创建唯一索引。
-
-  可以通过 ALTER TABLE table_name ADD UNIQUE (column); 创建唯一索引
-
-  可以通过 ALTER TABLE table_name ADD UNIQUE (column1,column2); 创建唯一组合索引
-
-  普通索引: 基本的索引类型，没有唯一性的限制，允许为NULL值。
-
-  可以通过ALTER TABLE table_name ADD INDEX index_name (column);创建普通索引
-
-  可以通过ALTER TABLE table_name ADD INDEX index_name(column1, column2, column3);创建组合索引
-
-  全文索引： 是目前搜索引擎使用的一种关键技术。
-
-  可以通过ALTER TABLE table_name ADD FULLTEXT (column);创建全文索引
+  * 唯一索引: 数据列不允许重复，允许为NULL值，一个表允许多个列创建唯一索引。
+  * 可以通过 ALTER TABLE table_name ADD UNIQUE (column); 创建唯一索引
+  
+  * 可以通过 ALTER TABLE table_name ADD UNIQUE (column1,column2); 创建唯一组合索引
+  
+  * 普通索引: 基本的索引类型，没有唯一性的限制，允许为NULL值。
+  * 可以通过ALTER TABLE table_name ADD INDEX index_name (column);创建普通索引
+  * 可以通过ALTER TABLE table_name ADD INDEX index_name(column1, column2, column3);创建组合索引
+  
+  * 全文索引： 是目前搜索引擎使用的一种关键技术。
+  * 可以通过ALTER TABLE table_name ADD FULLTEXT (column);创建全文索引
 
 ------
 
 * #### 索引的数据结构（b树，hash）
   索引的数据结构和具体存储引擎的实现有关，在MySQL中使用较多的索引有Hash索引，B+树索引等，而我们经常使用的InnoDB存储引擎的默认索引实现为：B+树索引。对于哈希索引来说，底层的数据结构就是哈希表，因此在绝大多数需求为单条记录查询的时候，可以选择哈希索引，查询性能最快；其余大部分场景，建议选择BTree索引。
 
-  1）B树索引
+  * B树索引
 
   mysql通过存储引擎取数据，基本上90%的人用的就是InnoDB了，按照实现方式分，InnoDB的索引类型目前只有两种：BTREE（B树）索引和HASH索引。B树索引是Mysql数据库中使用最频繁的索引类型，基本所有存储引擎都支持BTree索引。通常我们说的索引不出意外指的就是（B树）索引（实际是用B+树实现的，因为在查看表索引时，mysql一律打印BTREE，所以简称为B树索引）
-
-
 
  	 查询方式：
 
@@ -489,7 +483,7 @@ MyISAM与InnoDB区别
 
   	5.）B+树有2个头指针，一个是树的根节点，一个是最小关键码的叶节点。
 
-  	2）哈希索引
+    * 哈希索引
 
  	 简要说下，类似于数据结构中简单实现的HASH表（散列表）一样，当我们在mysql中用哈希索引时，主要就是通过Hash算法（常见的Hash算法有直接定址法、平方取中法、折叠法、除数取余法、随机数法），将数据库字段数据转换成定长的Hash值，与这条数据的行指针一并存入Hash表的对应位置；如果发生Hash碰撞（两个不同关键字的Hash值相同），则在对应Hash键下以链表形式存储。当然这只是简略模拟图。
 
