@@ -1020,12 +1020,12 @@ MyISAM与InnoDB区别
 * #### MySQL中都有哪些触发器？
   在MySQL数据库中有如下六种触发器：
 
-  Before Insert
-  After Insert
-  Before Update
-  After Update
-  Before Delete
-  After Delete
+  * Before Insert
+  * After Insert
+  * Before Update
+  * After Update
+  * Before Delete
+  * After Delete
 
 ---
 
