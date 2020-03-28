@@ -1031,21 +1031,21 @@ MyISAM与InnoDB区别
 
 ### 常用SQL语句
 * #### SQL语句主要分为哪几类
-  数据定义语言DDL（Data Ddefinition Language）CREATE，DROP，ALTER
+  * 数据定义语言DDL（Data Ddefinition Language）CREATE，DROP，ALTER
 
-  主要为以上操作 即对逻辑结构等有操作的，其中包括表结构，视图和索引。
+    主要为以上操作 即对逻辑结构等有操作的，其中包括表结构，视图和索引。
 
-  数据查询语言DQL（Data Query Language）SELECT
+  * 数据查询语言DQL（Data Query Language）SELECT
 
-  这个较为好理解 即查询操作，以select关键字。各种简单查询，连接查询等 都属于DQL。
+    这个较为好理解 即查询操作，以select关键字。各种简单查询，连接查询等 都属于DQL。
 
-  数据操纵语言DML（Data Manipulation Language）INSERT，UPDATE，DELETE
+  * 数据操纵语言DML（Data Manipulation Language）INSERT，UPDATE，DELETE
 
-  主要为以上操作 即对数据进行操作的，对应上面所说的查询操作 DQL与DML共同构建了多数初级程序员常用的增删改查操作。而查询是较为特殊的一种 被划分到DQL中。
+    主要为以上操作 即对数据进行操作的，对应上面所说的查询操作 DQL与DML共同构建了多数初级程序员常用的增删改查操作。而查询是较为特殊的一种 被划分到DQL中。
 
-  数据控制功能DCL（Data Control Language）GRANT，REVOKE，COMMIT，ROLLBACK
+  * 数据控制功能DCL（Data Control Language）GRANT，REVOKE，COMMIT，ROLLBACK
 
-  主要为以上操作 即对数据库安全性完整性等有操作的，可以简单的理解为权限控制等。
+    主要为以上操作 即对数据库安全性完整性等有操作的，可以简单的理解为权限控制等。
 
 ---
 
