@@ -1757,7 +1757,8 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
   第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。
 
   读写分离有哪些解决方案？
-  读写分离是依赖于主从复制，而主从复制又是为读写分离服务的。因为主从复制要求slave不能写只能读（如果对slave执行写操作，那么show slave status将会呈现Slave_SQL_Running=NO，此时你需要按照前面提到的手动同步一下slave）。
+
+读写分离是依赖于主从复制，而主从复制又是为读写分离服务的。因为主从复制要求slave不能写只能读（如果对slave执行写操作，那么show slave status将会呈现Slave_SQL_Running=NO，此时你需要按照前面提到的手动同步一下slave）。
 
   方案一
 
@@ -1779,7 +1780,8 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
   缺点：类内部方法通过this.xx()方式相互调用时，aop不会进行拦截，需进行特殊处理。
 
   备份计划，mysqldump以及xtranbackup的实现原理
-  (1)备份计划
+
+(1)备份计划
 
   视库的大小来定，一般来说 100G 内的库，可以考虑使用 mysqldump 来做，因为 mysqldump更加轻巧灵活，备份时间选在业务低峰期，可以每天进行都进行全量备份(mysqldump 备份出来的文件比较小，压缩之后更小)。
 
