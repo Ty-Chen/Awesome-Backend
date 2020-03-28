@@ -865,11 +865,16 @@ MyISAM与InnoDB区别
 ------
 
 * #### InnoDB存储引擎的锁的算法有三种
-  Record lock：单个行记录上的锁
-  Gap lock：间隙锁，锁定一个范围，不包括记录本身
-  Next-key lock：record+gap 锁定一个范围，包含记录本身
-  相关知识点：
-
+  * Record lock：单个行记录上的锁
+  
+  * Gap lock：间隙锁，锁定一个范围，不包括记录本身
+  
+* Next-key lock：record+gap 锁定一个范围，包含记录本身
+  
+    
+  
+    相关知识点：
+  
   1. innodb对于行的查询使用next-key lock
   2. Next-locking keying为了解决Phantom Problem幻读问题
   3. 当查询的索引含有唯一属性时，将next-key lock降级为record key
