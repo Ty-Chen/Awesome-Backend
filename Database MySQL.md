@@ -869,7 +869,7 @@ MyISAM与InnoDB区别
   
   * Gap lock：间隙锁，锁定一个范围，不包括记录本身
   
-* Next-key lock：record+gap 锁定一个范围，包含记录本身
+  * Next-key lock：record+gap 锁定一个范围，包含记录本身
   
     
   
