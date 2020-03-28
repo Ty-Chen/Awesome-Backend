@@ -1061,9 +1061,13 @@ MyISAM与InnoDB区别
 * #### SQL 约束有哪几种？
 
   NOT NULL: 用于控制字段的内容一定不能为空（NULL）。
+  
   UNIQUE: 控件字段内容不能重复，一个表允许有多个 Unique 约束。
+  
   PRIMARY KEY: 也是用于控件字段内容不能重复，但它在一个表只允许出现一个。
+  
   FOREIGN KEY: 用于预防破坏表之间连接的动作，也能防止非法数据插入外键列，因为它必须是它指向的那个表中的值之一。
+  
   CHECK: 用于控制字段的值范围。
 
 ---
@@ -1076,7 +1080,7 @@ MyISAM与InnoDB区别
   - 全连接（FULL JOIN）
   - 交叉连接（CROSS JOIN）
 
-  `SELECT * FROM A,B(,C)`或者`SELECT * FROM A CROSS JOIN B (CROSS JOIN C)`
+  `SELECT * FROM A,B,C`或者`SELECT * FROM A CROSS JOIN B (CROSS JOIN C)`
   \#没有任何关联条件，结果是笛卡尔积，结果集会很大，没有意义，很少使用内连接（INNER JOIN）SELECT * FROM A,B WHERE A.id=B.id或者SELECT * FROM A INNER JOIN B ON A.id=B.id多表中同时符合某种条件的数据记录的集合，INNER JOIN可以缩写为JOIN
 
   内连接分为三类
@@ -1216,6 +1220,8 @@ MyISAM与InnoDB区别
   |回滚	|可回滚|	不可回滚|	不可回滚|
   |删除内容	|表结构还在，删除表的全部或者一部分数据行	|表结构还在，删除表中的所有数据|	从数据库中删除表，所有的数据行，索引和权限也会被删除|
   |删除速度|	删除速度慢，需要逐行删除|	删除速度快|	删除速度最快|
+  
+  
   因此，在不再需要一张表的时候，用drop；在想删除部分数据行时候，用delete；在保留表而删除所有数据的时候用truncate。
 
 ---
