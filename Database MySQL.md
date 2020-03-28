@@ -1,3 +1,5 @@
+
+
 数据库面试攻略
 =======
 
@@ -1295,15 +1297,22 @@ MyISAM与InnoDB区别
   extra 的信息非常丰富，常见的有：
 
   Using index 使用覆盖索引
+
   Using where 使用了用where子句来过滤结果集
+
   Using filesort 使用文件排序，使用非索引列进行排序时出现，非常消耗性能，尽量优化。
+
   Using temporary 使用了临时表 sql优化的目标可以参考阿里开发手册
+
   >【推荐】SQL性能优化的目标：至少要达到 range 级别，要求是ref级别，如果可以是consts最好。
-说明：
-1） consts 单表中最多只有一个匹配行（主键或者唯一索引），在优化阶段即可读取到数据。
-2） ref 指的是使用普通的索引（normal index）。
-3） range 对索引进行范围检索。
-反例：explain表的结果，type=index，索引物理文件全扫描，速度非常慢，这个index级别比较range还低，与全表扫描是小巫见大巫。
+  >说明：
+  >
+  >1） consts 单表中最多只有一个匹配行（主键或者唯一索引），在优化阶段即可读取到数据。
+  >
+  >2） ref 指的是使用普通的索引（normal index）。
+  >
+  >3） range 对索引进行范围检索。
+  >反例：explain表的结果，type=index，索引物理文件全扫描，速度非常慢，这个index级别比较range还低，与全表扫描是小巫见大巫。
 
 ---
 
