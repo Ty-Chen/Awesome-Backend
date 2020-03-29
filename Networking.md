@@ -1515,7 +1515,7 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
   2. linux 2.6新增的eventfd：
   
   ```
-int eventfd(unsigned int initval, int flags); 
+  int eventfd(unsigned int initval, int flags); 
   ```
 
   
@@ -1529,7 +1529,7 @@ int eventfd(unsigned int initval, int flags);
   
   
   ```
-int socketpair(int domain, int type, int protocol, int sv[2]);
+  int socketpair(int domain, int type, int protocol, int sv[2]);
   ```
 
   
