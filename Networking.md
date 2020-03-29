@@ -1476,12 +1476,14 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
   
 
   ```cpp
-  while (!m_bQuit)  {  
+  while (!m_bQuit)  
+  {  
       epoll_or_select_func();  
     
       handle_io_events();  
     
-      handle_other_things();  }  
+      handle_other_things();  
+}  
   ```
 
   在epoll_or_select_func()中通过select()或者poll/epoll()去检测socket fd上的io事件，若存在这些事件则下一步handle_io_events()来处理这些事件（收发数据），做完之后可能还要做一些系统其他的任务，即调用handle_other_things()。
@@ -1511,9 +1513,9 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
   1. 管道pipe，创建一个管道，将管道绑定到epoll_fd上。需要时，向管道一端写入一个字节，工作线程立即被唤醒。
 
   2. linux 2.6新增的eventfd：
-
+  
   ```
-  int eventfd(unsigned int initval, int flags); 
+int eventfd(unsigned int initval, int flags); 
   ```
 
   
@@ -1525,9 +1527,9 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
   3. 第三种方法最方便。即linux特有的socketpair，socketpair是一对相互连接的socket，相当于服务器端和客户端的两个端点，每一端都可以读写数据。
 
   
-
+  
   ```
-  int socketpair(int domain, int type, int protocol, int sv[2]);
+int socketpair(int domain, int type, int protocol, int sv[2]);
   ```
 
   
@@ -1541,7 +1543,7 @@ Hessian 是一个轻量级的 remoting on http 工具，采用的是 Binary RPC 
   如果是使用socketpair，那么domain参数一定要设置成AFX_UNIX。
 
   
-
+  
   由于在windows，select函数只支持检测socket这一种fd，所以windows上一般只能用方法3的原理。而且需要手动创建两个socket，然后一个连接另外一个，将读取的那一段绑定到select的fd上去。这在写跨两个平台代码时，需要注意的地方。
 
 ---
