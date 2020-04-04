@@ -2444,8 +2444,6 @@ public:
 
 ![img](https:////upload-images.jianshu.io/upload_images/2240277-e008c47f06d3de93?imageMogr2/auto-orient/strip|imageView2/2/w/695/format/webp)
 
-在本文中对归并排序和基数排序暂不介绍，有兴趣的可以查看本文最后参考资料中的[1]，里面有对这两个算法的详细解释。
-
 ### 二、详细算法介绍
 
 #### 1 直接插入排序
