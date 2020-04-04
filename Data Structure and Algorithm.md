@@ -2442,7 +2442,7 @@ public:
 
 ### 一、分类与性能总结
 
-![img](https:////upload-images.jianshu.io/upload_images/2240277-e008c47f06d3de93?imageMogr2/auto-orient/strip|imageView2/2/w/695/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/1.webp)
 
 ### 二、详细算法介绍
 
@@ -2452,7 +2452,7 @@ public:
 
 直接插入排序的核心思想就是：**将数组中的所有元素依次跟前面已经排好的元素相比较，如果选择的元素比已排序的元素小，则交换，直到全部元素都比较过。**
 
-![img](https:////upload-images.jianshu.io/upload_images/1156494-936d9f02b6aac880.gif?imageMogr2/auto-orient/strip|imageView2/2/w/594/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/2.webp)
 
 
  因此，从上面的描述中我们可以发现，直接插入排序可以用两个循环完成：
