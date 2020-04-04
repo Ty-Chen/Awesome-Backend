@@ -2485,7 +2485,7 @@ def insert_sort(L):
 
 希尔排序的核心思想就是：**将待排序数组按照步长gap进行分组，然后将每组的元素利用直接插入排序的方法进行排序；每次将gap折半减小，循环上述操作；当gap=1时，利用直接插入，完成排序。**
 
-![img](https:////upload-images.jianshu.io/upload_images/10390594-bba96b5fbfddeb44.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/3.webp)
 
 
  因此，从上面的描述中我们可以发现，希尔排序可以用三个循环完成：
@@ -2560,14 +2560,14 @@ def select_sort(L):
 堆排序的核心思想就是：
  **1.首先将序列构建称为大顶堆；**
 
-![img](https:////upload-images.jianshu.io/upload_images/1156494-596eee6397817ca2.png?imageMogr2/auto-orient/strip|imageView2/2/w/664/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/4.webp)
 
 这样满足了大顶堆那条性质：位于根节点的元素一定是当前序列的最大值
 
 
 **2. 取出当前大顶堆的根节点，将其与序列末尾元素进行交换；**
 
-![img](https:////upload-images.jianshu.io/upload_images/1156494-7e5c63ce1ed48ebf.png?imageMogr2/auto-orient/strip|imageView2/2/w/658/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/5.webp)
 
 此时序列末尾的元素为已排序的最大值；由于交换了元素，当前位于根节点的堆并不一定满足大顶堆的性质
 
@@ -2623,7 +2623,7 @@ def heap_sort(L):
  **3. 对于长度为n的序列，一共需要执行n-1轮比较**
  **（利用while循环可以减少执行次数）**
 
-![img](https:////upload-images.jianshu.io/upload_images/1156494-fef2b2e3edc03289.gif?imageMogr2/auto-orient/strip|imageView2/2/w/600/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/6.webp)
 
 
 
@@ -2654,7 +2654,7 @@ def bubble_sort(L):
  **2. 将序列当中的所有数依次遍历，比基准数大的位于其右侧，比基准数小的位于其左侧。**
  **3. 重复步骤1.2，直到所有子集当中只有一个元素为止。**
 
-![img](https:////upload-images.jianshu.io/upload_images/1156494-2d150e5550b700fa.gif?imageMogr2/auto-orient/strip|imageView2/2/w/600/format/webp)
+![img](https://github.com/Ty-Chen/Awesome-Backend/blob/master/7.webp)
 
 
  上述过程可用伪代码表示如下：
