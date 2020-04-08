@@ -52,10 +52,10 @@ C和C++面试攻略
 
   初始化顺序：
 
-  * 1） 基类的静态变量或全局变量
-  * 2） 派生类的静态变量或全局变量
-  * 3） 基类的成员变量
-  * 4） 派生类的成员变量
+  *  基类的静态变量或全局变量
+  *  派生类的静态变量或全局变量
+  *  基类的成员变量
+  *  派生类的成员变量
 
 -----
 * #### gdb调试进程
@@ -139,7 +139,7 @@ C和C++面试攻略
 
 ------
 * #### 引用和多态的区别？
- 引用是除指针外另一个可以产生多态效果的手段。这意味着，一个基类的引用可以指向它的派生类实例。
+   引用是除指针外另一个可以产生多态效果的手段。这意味着，一个基类的引用可以指向它的派生类实例。
 
 -----
  * #### 指针和引用的区别？
@@ -751,10 +751,8 @@ class C : public B {
 
   如：
 
-  [![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
   ```
-  int main(int argc, char* argv[])
+int main(int argc, char* argv[])
   
   {
   char a[10] = {0};
@@ -767,19 +765,15 @@ class C : public B {
   
   }
   ```
-
-  [![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
+  
   上面情况是检测不到栈溢出的，因为函数还没执行完就退出了
 
-  [![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
   ```
-  void fun()
+void fun()
   {
-   char a[10] = {0};
+ char a[10] = {0};
    strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
-  }
+}
   int main(int argc, char* argv[])
   {
     fun();
@@ -787,13 +781,11 @@ class C : public B {
     return 0;
   }
   ```
-
-  [![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
+  
   这种情况调用完fun函数就会检测到异常了
-
+  
   b.栈溢出的解决办法
-
+  
   如果是超过栈的大小时，那就直接换成用堆；如果是不超过栈大小但是分配值小的，就增大分配的大小
 
   2）内存溢出
@@ -818,21 +810,21 @@ class C : public B {
 
 * #### C/C++中内存分配方法
 
-  1) malloc 函数： void *malloc(unsigned int size)
+  - malloc 函数： void *malloc(unsigned int size)
 
      在内存的动态分配区域中分配一个长度为size的连续空间，如果分配成功，则返回所分配内存空间的首地址，否则返回NULL，申请的内存不会进行初始化。
 
-  2）calloc 函数： void *calloc(unsigned int num, unsigned int size)
+  - calloc 函数： void *calloc(unsigned int num, unsigned int size)
 
      按照所给的数据个数和数据类型所占字节数，分配一个 num * size 连续的空间。
 
     calloc申请内存空间后，会自动初始化内存空间为 0，但是malloc不会进行初始化，其内存空间存储的是一些随机数据。 
-  3）realloc 函数： void *realloc(void *ptr, unsigned int size)
+  - realloc 函数： void *realloc(void *ptr, unsigned int size)
 
     动态分配一个长度为size的内存空间，并把内存空间的首地址赋值给ptr，把ptr内存空间调整为size。
 
     申请的内存空间不会进行初始化。
-  4）new是动态分配内存的运算符，自动计算需要分配的空间，在分配类类型的内存空间时，同时调用类的构造函数，对内存空间进行初始化，即完成类的初始化工作。动态分配内置类型是否自动初始化取决于变量定义的位置，在函数体外定义的变量都初始化为0，在函数体内定义的内置类型变量都不进行初始化。
+  - new是动态分配内存的运算符，自动计算需要分配的空间，在分配类类型的内存空间时，同时调用类的构造函数，对内存空间进行初始化，即完成类的初始化工作。动态分配内置类型是否自动初始化取决于变量定义的位置，在函数体外定义的变量都初始化为0，在函数体内定义的内置类型变量都不进行初始化。
 
 ---
 
@@ -861,8 +853,8 @@ STL相关问题
   map和hashmap的区别
   
   * 底层数据结构不同，map是红黑树，hashmap是哈希表
-* map元素可以自动按照键值排序，hashmap的各项操作平均时间复杂度接近常数
-* map是C++标准的一部而hashmap并不是（unsorted_map是标准库了）
+  * map元素可以自动按照键值排序，hashmap的各项操作平均时间复杂度接近常数
+  * map是C++标准的一部而hashmap并不是（unsorted_map是标准库了）
 
 ------
 
@@ -906,16 +898,16 @@ STL相关问题
 -----
 
 * #### map用[]和find查找有什么区别？
-  ​	map的下标运算符[]的作用是：将关键码作为下标去执行查找，并返回对应的值；如果不存在这个关键码，就将一个具有该关键码和值类型的默认值的项插入这个map。
-​	map的find函数：用关键码执行查找，找到了返回该位置的迭代器；如果不存在这个关键码，就返回尾迭代器。
+  - map的下标运算符[]的作用是：将关键码作为下标去执行查找，并返回对应的值；如果不存在这个关键码，就将一个具有该关键码和值类型的默认值的项插入这个map。
+  - map的find函数：用关键码执行查找，找到了返回该位置的迭代器；如果不存在这个关键码，就返回尾迭代器。
 
 -----
 
 * #### map对key的要求？
   1. 支持拷贝构造
-2. 支持operator=
-3. operator< 如果没有operator<那么 map模板必须增加第三个模板参数
-4. 默认的构造函数
+  2. 支持operator=
+  3. operator< 如果没有operator<那么 map模板必须增加第三个模板参数
+  4. 默认的构造函数
 
 -----
 
