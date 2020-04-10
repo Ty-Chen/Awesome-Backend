@@ -752,34 +752,33 @@ class C : public B {
   如：
 
   ```
-int main(int argc, char* argv[])
-  
-  {
-  char a[10] = {0};
-  
-  strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
-  
-  exit(0);
-  
-  return 0;
-  
-  }
+	int main(int argc, char* argv[])
+	{
+	  char a[10] = {0};
+
+	  strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
+
+	  exit(0);
+
+	  return 0;
+
+	}
   ```
   
   上面情况是检测不到栈溢出的，因为函数还没执行完就退出了
 
   ```
-void fun()
-  {
- char a[10] = {0};
-   strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
-}
-  int main(int argc, char* argv[])
-  {
-    fun();
-    exit(0);
-    return 0;
-  }
+	void fun()
+    {
+ 		char a[10] = {0};
+   		strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
+	}
+  	int main(int argc, char* argv[])
+	{
+		fun();
+		exit(0);
+		return 0;
+	}
   ```
   
   这种情况调用完fun函数就会检测到异常了
