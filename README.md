@@ -1,7 +1,7 @@
-后端面试资料收集
+后端学习及资料收集
 ====
 
-本文收集、记录后端面试各个方面的面试攻略，包括如下方面：
+本文收集、记录后端面试各个方面的学习及面试攻略，包括如下方面：
 
 * ## [C & C++](https://github.com/Ty-Chen/Awesome-Backend/blob/master/c%20%26%20c%2B%2B.md "c&c++")
 * ## [GO](https://github.com/Ty-Chen/Awesome-Backend/blob/master/GO.md "go")
