@@ -13,7 +13,7 @@
 ### 补充资料
 
 - [How to Analyze and Tune MySQL Queries for Better Performance](https://www.youtube.com/watch?v=EEklkdkuSfM)
-- MySQL Performance Tuning 101
+- [MySQL Performance Tuning 101](https://www.youtube.com/watch?v=RMwCrtqvkM0)
 - MySQL Performance Schema & Sys Schema
 - MySQL Performance: Demystified Tuning & Best Practices
 - MySQL Security Best Practices
