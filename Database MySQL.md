@@ -1936,5 +1936,9 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
 
 ---
 
-- #### Select * count为什么会越来越慢？
+- ####  count * 为什么会越来越慢？
 
+  在不同的 MySQL 引擎中，`count(*)` 有不同的实现方式。
+
+  - MyISAM 引擎把一个表的总行数存在了磁盘上，因此执行 `count(*)` 的时候会直接返回这个数，效率很高；
+  - 而 InnoDB 引擎就麻烦了，它执行 `count(*)` 的时候，需要把数据一行一行地从引擎里面读出来，然后累积计数。
