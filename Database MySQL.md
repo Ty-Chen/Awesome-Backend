@@ -1956,3 +1956,9 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
 - #### show table status 命令的输出结果里面也有一个 TABLE_ROWS 用于显示这个表当前有多少行，这个命令执行挺快的，那这个 TABLE_ROWS 能代替 count(*) 吗？
 
   索引统计的值是通过采样来估算的。实际上，TABLE_ROWS 就是从这个采样估算得来的，因此它也很不准。官方文档说误差可能达到 40% 到 50%。所以，show table status 命令显示的行数也不能直接使用。
+
+---
+
+- #### 有什么解决方案？
+
+  把这个计数直接放到数据库里单独的一张计数表中
