@@ -1962,3 +1962,9 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
 - #### 有什么解决方案？
 
   把这个计数直接放到数据库里单独的一张计数表中
+
+---
+
+- #### count(*)、count(主键 id)、count(字段) 和 count(1) 等不同用法的性能差别？
+
+  
