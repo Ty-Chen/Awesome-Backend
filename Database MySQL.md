@@ -1967,4 +1967,6 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
 
 - #### count(*)、count(主键 id)、count(字段) 和 count(1) 等不同用法的性能差别？
 
-  
+  count() 是一个聚合函数，对于返回的结果集，一行行地判断，如果 count 函数的参数不是 NULL，累计值就加 1，否则不加。最后返回累计值。所以，count(*)、count(主键 id) 和 count(1) 都表示返回满足条件的结果集的总行数；而 count(字段），则表示返回满足条件的数据行里面，参数“字段”不为 NULL 的总个数。
+
+  - 对于 count(主键 id) 来说，InnoDB 引擎会遍历整张表，把每一行的 id 值都取出来，返回给 server 层。server 层拿到 id 后，判断是不可能为空的，就按行累加。
