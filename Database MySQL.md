@@ -1976,3 +1976,9 @@ SELECT a.* FROM 表1 a, (select id from 表1 where 条件 LIMIT 100000,20 ) b wh
 
   按照效率排序的话，count(字段)<count(主键 id)<count(1)≈count(*)，尽量选用`count(*)`
 
+---
+
+- #### 普通索引和唯一索引怎么选择
+
+  这两类索引在查询能力上是没差别的，主要考虑的是对更新性能的影响，一般尽量选择普通索引。如果所有的更新后面，都马上伴随着对这个记录的查询，那么应该关闭 change buffer。而在其他情况下，change buffer 都能提升更新性能。在实际使用中，普通索引和 change buffer 的配合使用，对于数据量大的表的更新优化还是很明显的。
+
