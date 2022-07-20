@@ -25,31 +25,26 @@
 
 ---
 
-数组和字符串
+[数组和字符串](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-Array.md)
 ------
 
-链表
+[链表](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-List.md)
 ------
 
-堆
+[堆](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-Heap.md)
 ------
 
-树
+[树](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-Tree.md)
 ------
 
-## 图
+## [图](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-Graph.md)
 
-排序算法
+[排序算法](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-Sort.md)
 ------
 
-大数查找
+[大数查找](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-LargeNum.md)
 ------
 
-越界问题
+[越界问题](https://github.com/Ty-Chen/Awesome-Backend/blob/master/Algorithm-OutofBorder.md)
 -----
 
-
-
-```cpp
-
-```
