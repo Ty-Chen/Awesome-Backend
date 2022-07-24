@@ -1010,9 +1010,9 @@ public:
 
 ---
 
-* #### 判断一个整数是否是回文数。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。（leetcode 9)
+* #### [回文数](https://leetcode.cn/problems/palindrome-number/)。回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。（leetcode 9)
 
-  本题有两种做法：1.转化为字符串再进行检索 2. 获取一半的整数和另一半比较。第二种空间使用更少，更优
+  本题有两种做法：1.转化为字符串再进行检索 2. 获取一半的整数和另一半比较。第二种空间使用更少，更优。
 
   ```cpp
   class Solution 
@@ -1049,9 +1049,9 @@ public:
 
 ### 查找元素
 
-* #### 找指定的两数之和：给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那两个整数，并返回他们的数组下标。(leetcode 1)
+* #### [两数之和](https://leetcode.cn/problems/two-sum/)：给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那两个整数，并返回他们的数组下标。(leetcode 1)
 
-  最蠢的是遍历，好点的是采用Map存储和查找，最佳选择为边存储边查找，下面给出后两种的解法。注意后一种改用了[unsorted_map](https://blog.csdn.net/u013354486/article/details/103327973)，会有更好的性能。
+  最蠢的是遍历，好点的是采用Map存储和查找，最佳选择为边存储边查找，下面给出后两种的解法。注意后一种改用了unsorted_map，会有更好的性能。
 
   ```cpp
   class Solution 
@@ -1113,6 +1113,7 @@ public:
       }
   };
   ```
+
 
 -----
 
@@ -1492,6 +1493,43 @@ public:
 
 ---
 
+### 数组操作
+
+数组操作通常会进行反转、部分的增删或者替换等，通常较为简单，但是需要注意边界条件。
+
+- #### [整数反转](https://leetcode.cn/problems/reverse-integer/)：给出一个 32 位的有符号整数，你需要将这个整数中每位上的数字进行反转。（leetcode 7）**
+
+- 本题主要需要考虑边界条件：判断反转后的数字是否超过 3232 位有符号整数的范围
+
+  ```c
+  class Solution {
+  public:
+      int reverse(int x) {
+          int rev = 0;
+          while (x != 0) {
+              int pop = x % 10;
+              x /= 10;
+              if (rev > INT_MAX/10 || (rev == INT_MAX / 10 && pop > 7)) return 0;
+              if (rev < INT_MIN/10 || (rev == INT_MIN / 10 && pop < -8)) return 0;
+              rev = rev * 10 + pop;
+          }
+          return rev;
+      }
+  };
+  ```
+
+---
+
+- #### [字符串转换整数 (atoi)](https://leetcode.cn/problems/string-to-integer-atoi/)：请你来实现一个 `myAtoi(string s)` 函数，使其能将字符串转换成一个 32 位有符号整数（类似 C/C++ 中的 `atoi` 函数）。
+
+  同样也是注意边界：每个字符检测是否合法，另外检测是否超边界
+
+
+
+
+
+---
+
 ### 匹配问题
 
 字符串匹配包括单模式串匹配和多模式串匹配。单模式串匹配指的是一个串跟一个串进行匹配，常用的有BF, RK, BM, KMP算法，另一种则是在一个串中同时查找多个串，它们分别是 Trie 树和 AC 自动机。
@@ -1806,9 +1844,3 @@ public:
   
   ```
 
------
-
-
-------
-
-### 
