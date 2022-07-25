@@ -2,38 +2,11 @@
 
 数组的问题通常包括子串问题、回文问题、查找元素、匹配问题，**通常其解法为双指针滑动、回溯、动态规划、堆栈**。
 
-### 子串问题
+### 一. 子串问题
 
 > **核心解法** 子串问题分为单数组求子串以及给两个数组比较求子串。其核心思想均为动态规划：双数组类似于二维动态规划，一定可以降维为一维，而单数组则可以考虑为一维动态规划，降维为双指针滑动。对于更多个数组的比较，一般还是循环迭代求解吧。
 
----
-
-* #### 求最大子串和
-
-  ​       最大子串和，即求一个数列中和最大的子列，采用**动态规划**可以有最优算法，时间复杂度为O（N）。因为最大连续子序列和只可能是以位置0～n-1中某个位置结尾。
-
-  ​       当遍历到第i个元素时，判断在它前面的连续子序列和是否大于0，如果大于0，则以位置i结尾的最大连续子序列和为元素i和前门的连续子序列和相加；否则，则以位置i结尾的最大连续子序列和为元素i。
-
-```cpp
-int maxsequence3(int a[], int len)  
-{  
-    int maxsum, maxhere;  
-    maxsum = maxhere = a[0];   //初始化最大和为a【0】  
-    for (int i = 1; i < len; i++) 
-    {  
-        if (maxhere <= 0)  
-            maxhere = a[i];  //如果前面位置最大连续子序列和小于等于0，则以当前位置i结尾的最大连续子序列和为a[i]  
-        else  
-            maxhere += a[i]; //如果前面位置最大连续子序列和大于0，则以当前位置i结尾的最大连续子序列和为它们两者之和  
-        if (maxhere > maxsum) {  
-            maxsum = maxhere;  //更新最大连续子序列和  
-        }  
-    }  
-    return maxsum;  
-}
-```
-
------
+#### 1. 滑动指针
 
 * #### 无重复字符的最长子串:给定一个字符串，请你找出其中不含有重复字符的最长子串的长度。(leetcode 3)
 
@@ -77,15 +50,157 @@ int maxsequence3(int a[], int len)
 
 -----
 
-* #### 串联所有单词的子串：给定一个字符串 **s** 和一些长度相同的单词 **words。**找出 **s** 中恰好可以由 **words** 中所有单词串联形成的子串的起始位置。注意子串要与 **words** 中的单词完全匹配，中间不能有其他字符，但不需要考虑 **words** 中单词串联的顺序。（leetcode 30）
+* #### [盛水最多的容器](https://leetcode.cn/problems/container-with-most-water/solution/)：给定 n 个非负整数 a1，a2，…，an，每个数代表坐标中的一个点 (i, ai) 。在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。（leet code 11)
 
-  本题主要在于关注以下几点：
-  （1）完全匹配意味着寻找s中长度为words总长的窗口，采用滑动窗口进行处理
-  （2）由于串联顺序并未规定，因此采用哈希表是很合理的做法
-  （3）哈希表中key为单词，value为words中出现次数，滑动窗口去查找目前有多少个该类单词，如果恰好满足则数量+1
+  形成的区域受限制于较短的那条，同时距离越远则可能的收益越大。因此我们从最左和最右开始检索，采用双指针法，移动较短的那端。
+
+  ```cpp
+   int maxArea(vector<int> &height)
+      {
+          int result = 0;
+          int heightSize = int(height.size());
+          int leftIndex = 0;
+          int rightIndex = heightSize - 1;
+  
+          while (leftIndex != rightIndex)
+          {
+              int tmpHeight;
+              int tmpWidth = rightIndex - leftIndex;
+              
+              //短的一侧向中间移动
+              if (height[leftIndex] < height[rightIndex])
+              {
+                  tmpHeight = height[leftIndex];
+                  leftIndex++;
+              }
+              else
+              {
+                  tmpHeight = height[rightIndex];
+                  rightIndex--;
+              }
+              int tmpResult = tmpWidth * tmpHeight;
+              if (tmpResult > result)
+              {
+                  result = tmpResult;
+              }
+          }
+          return result;
+      }
+  ```
+
+---
+
+* #### 接雨水：给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。(leet code 42)
+
+  遇到这种一般最优解都是双指针首尾滑动，主要难点在于设计怎么计算。这题的核心思想在于：左边比右边高则从右边开始算格子，右边比左边高则从左边开始算格子
 
   ```cpp
   class Solution {
+  public:
+      int trap(vector<int>& height) {
+          int begin = 0, end = height.size() - 1, ret = 0;
+          int leftMax = 0, rightMax = 0;
+          while (begin < end)
+          {
+              if (height[begin] < height[end])
+              {
+                  if (height[begin] < leftMax)
+                      ret += leftMax - height[begin];
+                  else
+                      leftMax = height[begin];
+                  
+                  begin++;
+              }
+              else
+              {
+                  if (height[end] < rightMax)
+                      ret += rightMax - height[end];
+                  else
+                      rightMax = height[end];
+                  end--;
+              }
+          }
+            
+          return ret;
+      }
+  };
+  ```
+
+---
+
+* #### 柱状图中的最大矩形：给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。求在该柱状图中，能够勾勒出来的矩形的最大面积。（leetcode 84)
+
+  本题和接雨水类似，均可以采用栈的方式去记录一个递增/递减序列从而顺序存储一个值，如果遇到不符合条件则出栈。也可以采用双指针滑动的方式求解。
+
+  ```cpp
+  class Solution {
+  public:
+      int largestRectangleArea(vector<int>& heights) {
+          stack<int> s;
+          s.push(-1);
+          int max_area = 0, height, width;
+          for(int i = 0; i < heights.size(); ++i) {
+              while(s.top() != -1 && heights[i] <= heights[s.top()]) {
+                  height = heights[s.top()];
+                  s.pop();
+                  width = i-s.top()-1;
+                  max_area = max(max_area, width*height);
+              }
+              s.push(i);
+          }
+          while(s.top() != -1) {
+              height = heights[s.top()];
+              s.pop();
+              width = heights.size() - s.top() - 1;
+              max_area = max(max_area, width*height);
+          }
+          return max_area;
+      }
+  };
+  
+  ```
+
+---
+
+#### 2. 动态规划
+
+* #### 求最大子串和
+
+  ​       最大子串和，即求一个数列中和最大的子列，采用**动态规划**可以有最优算法，时间复杂度为O（N）。因为最大连续子序列和只可能是以位置0～n-1中某个位置结尾。
+
+  ​       当遍历到第i个元素时，判断在它前面的连续子序列和是否大于0，如果大于0，则以位置i结尾的最大连续子序列和为元素i和前门的连续子序列和相加；否则，则以位置i结尾的最大连续子序列和为元素i。
+
+```cpp
+int maxsequence3(int a[], int len)  
+{  
+    int maxsum, maxhere;  
+    maxsum = maxhere = a[0];   //初始化最大和为a【0】  
+    for (int i = 1; i < len; i++) 
+    {  
+        if (maxhere <= 0)  
+            maxhere = a[i];  //如果前面位置最大连续子序列和小于等于0，则以当前位置i结尾的最大连续子序列和为a[i]  
+        else  
+            maxhere += a[i]; //如果前面位置最大连续子序列和大于0，则以当前位置i结尾的最大连续子序列和为它们两者之和  
+        if (maxhere > maxsum) {  
+            maxsum = maxhere;  //更新最大连续子序列和  
+        }  
+    }  
+    return maxsum;  
+}
+```
+
+-----
+
+* #### 串联所有单词的子串：给定一个字符串 **s** 和一些长度相同的单词 **words。**找出 **s** 中恰好可以由 **words** 中所有单词串联形成的子串的起始位置。注意子串要与 **words** 中的单词完全匹配，中间不能有其他字符，但不需要考虑 **words** 中单词串联的顺序。（leetcode 30）
+
+
+* 本题主要在于关注以下几点：
+（1）完全匹配意味着寻找s中长度为words总长的窗口，采用滑动窗口进行处理
+  （2）由于串联顺序并未规定，因此采用哈希表是很合理的做法
+  （3）哈希表中key为单词，value为words中出现次数，滑动窗口去查找目前有多少个该类单词，如果恰好满足则数量+1
+  
+  ```cpp
+class Solution {
   public:
       vector<int> findSubstring(string s, vector<string> &words) {
           //特殊情况直接排除
@@ -320,115 +435,6 @@ int maxsequence3(int a[], int len)
 
 ---
 
-* #### 盛水最多的容器：给定 n 个非负整数 a1，a2，…，an，每个数代表坐标中的一个点 (i, ai) 。在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。（leet code 11)
-
-  形成的区域受限制于较短的那条，同时距离越远则可能的收益越大。因此我们从最左和最右开始检索，采用双指针法，移动较短的那端。
-
-  ```cpp
-   int maxArea(vector<int> &height)
-      {
-          int result = 0;
-          int heightSize = int(height.size());
-          int leftIndex = 0;
-          int rightIndex = heightSize - 1;
-  
-          while (leftIndex != rightIndex)
-          {
-              int tmpHeight;
-              int tmpWidth = rightIndex - leftIndex;
-              
-              //短的一侧向中间移动
-              if (height[leftIndex] < height[rightIndex])
-              {
-                  tmpHeight = height[leftIndex];
-                  leftIndex++;
-              }
-              else
-              {
-                  tmpHeight = height[rightIndex];
-                  rightIndex--;
-              }
-              int tmpResult = tmpWidth * tmpHeight;
-              if (tmpResult > result)
-              {
-                  result = tmpResult;
-              }
-          }
-          return result;
-      }
-  ```
-
----
-
-* #### 接雨水：给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。(leet code 42)
-
-  遇到这种一般最优解都是双指针首尾滑动，主要难点在于设计怎么计算。这题的核心思想在于：左边比右边高则从右边开始算格子，右边比左边高则从左边开始算格子
-
-  ```cpp
-  class Solution {
-  public:
-      int trap(vector<int>& height) {
-          int begin = 0, end = height.size() - 1, ret = 0;
-          int leftMax = 0, rightMax = 0;
-          while (begin < end)
-          {
-              if (height[begin] < height[end])
-              {
-                  if (height[begin] < leftMax)
-                      ret += leftMax - height[begin];
-                  else
-                      leftMax = height[begin];
-                  
-                  begin++;
-              }
-              else
-              {
-                  if (height[end] < rightMax)
-                      ret += rightMax - height[end];
-                  else
-                      rightMax = height[end];
-                  end--;
-              }
-          }
-            
-          return ret;
-      }
-  };
-  ```
-
----
-
-* #### 柱状图中的最大矩形：给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。求在该柱状图中，能够勾勒出来的矩形的最大面积。（leetcode 84)
-
-  本题和接雨水类似，均可以采用栈的方式去记录一个递增/递减序列从而顺序存储一个值，如果遇到不符合条件则出栈。也可以采用双指针滑动的方式求解。
-
-  ```cpp
-  class Solution {
-  public:
-      int largestRectangleArea(vector<int>& heights) {
-          stack<int> s;
-          s.push(-1);
-          int max_area = 0, height, width;
-          for(int i = 0; i < heights.size(); ++i) {
-              while(s.top() != -1 && heights[i] <= heights[s.top()]) {
-                  height = heights[s.top()];
-                  s.pop();
-                  width = i-s.top()-1;
-                  max_area = max(max_area, width*height);
-              }
-              s.push(i);
-          }
-          while(s.top() != -1) {
-              height = heights[s.top()];
-              s.pop();
-              width = heights.size() - s.top() - 1;
-              max_area = max(max_area, width*height);
-          }
-          return max_area;
-      }
-  };
-  
-  ```
 
 ---
 
@@ -840,7 +846,7 @@ public:
 
 ---
 
-### 回文问题
+### 二. 回文问题
 
 * #### 最长回文子串：给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。(leetcode 5)
 
@@ -1047,7 +1053,7 @@ public:
 
 ---
 
-### 查找元素
+### 三. 查找元素
 
 * #### [两数之和](https://leetcode.cn/problems/two-sum/)：给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那两个整数，并返回他们的数组下标。(leetcode 1)
 
@@ -1114,8 +1120,176 @@ public:
   };
   ```
 
+---
 
------
+- #### [三数之和](https://leetcode.cn/problems/3sum/)：给你一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a，b，c ，使得 a + b + c = 0 ？请你找出所有和为 0 且不重复的三元组。
+
+  通过哈希或者排序，记录下有哪些数字，然后双指针滑动去看是否存在值和两数之和相等。可以排序之后从首尾开始判断并滑动得出结果即可。
+
+  ```c
+  class Solution {
+  public:
+  	vector<vector<int>> threeSum(vector<int>& nums) {
+  		int target = 0, val = 0, begin, end;
+          int size = nums.size();
+  		vector<int> tmp;
+  		vector<int>::iterator beginIter, endIter;
+  		vector<vector<int>> ret;
+  
+  		if (size <= 2)
+  			return ret;
+  
+  		sort(nums.begin(), nums.end());
+  		for (int i = 0; i < size - 2; i++)
+  		{
+  			target = 0 - nums[i];
+  			if (target < 0)
+  				break;
+  
+  			beginIter = nums.begin() + i + 1;
+  			endIter = nums.end() - 1;
+  
+  			while (beginIter < endIter)
+  			{
+  				begin = *beginIter;
+                  end = *endIter;
+  				val = begin + end;
+  				if (val == target)
+  				{
+  					tmp.push_back(nums[i]);
+  					tmp.push_back(*beginIter);
+  					tmp.push_back(*endIter);
+  					ret.push_back(tmp);
+  					tmp.clear();
+  					while (beginIter < endIter && *beginIter == begin)
+  						beginIter++;
+  					while (beginIter < endIter && *endIter == end)
+  						endIter--;
+  
+  				}
+  				else if (val < target)
+  				{
+  					beginIter++;
+  				}
+  				else
+  				{
+  					endIter--;
+  				}
+  			}
+  
+  			while (i < size - 2 && nums[i] == nums[i + 1])
+  				i++;
+  		}
+  
+  		return ret;
+  	}
+  };
+  ```
+
+---
+
+- #### [最接近的三数之和](https://leetcode.cn/problems/3sum-closest/)：给你一个长度为 `n` 的整数数组 `nums` 和 一个目标值 `target`。请你从 `nums` 中选出三个整数，使它们的和与 `target` 最接近。返回这三个数的和。
+
+  和上题类似，其区别在于是近似而非精确取值，这里用一个绝对值去计算gap。
+
+  ```c
+  class Solution {
+  public:
+      int threeSumClosest(vector<int>& nums, int target) {
+  		int val = 0, begin, end, ret = 0, inTarget, gap;
+  		int size = nums.size();
+  		vector<int>::iterator beginIter, endIter;
+  
+  		if (size <= 2)
+  			return 0;
+  
+  		gap = INT_MAX;
+  
+  		sort(nums.begin(), nums.end());
+  		for (int i = 0; i < size - 2; i++)
+  		{
+  			inTarget = target - nums[i];
+  
+  			beginIter = nums.begin() + i + 1;
+  			endIter = nums.end() - 1;
+  
+  			while (beginIter < endIter)
+  			{
+  				begin = *beginIter;
+  				end = *endIter;
+  				val = begin + end;
+  				if (val == inTarget)
+  				{
+  					return target;
+  				}
+  				else if (val < inTarget)
+  				{
+  					beginIter++;
+  				}
+  				else
+  				{
+  					endIter--;
+  				}
+  
+  				if (abs(val - inTarget) < gap)
+  				{
+  					gap = abs(val - inTarget);
+  					ret = val + nums[i];
+  				}
+  			}
+  		}
+  
+  		return ret; 
+      }
+  };
+  ```
+
+---
+
+- #### [四数之和](https://leetcode.cn/problems/4sum/)：给你一个由 `n` 个整数组成的数组 `nums` ，和一个目标值 `target` 。请你找出并返回满足下述全部条件且**不重复**的四元组。
+
+  一样的配方一样的解法。
+
+  ```c
+  class Solution {
+  public:
+      vector<vector<int>> fourSum(vector<int>& nums, int target) {
+          if (nums.size() < 4) return {};
+          sort(nums.begin(), nums.end());
+          int N = nums.size();
+          int maxSum3 = nums[N - 3] + nums[N - 2] + nums[N - 1];
+          int maxSum2 = nums[N - 2] + nums[N - 1];
+          vector<vector<int> > res;
+          for (int i = 0; i < N - 3; ++i) {
+              if (4 * nums[i] > target) break;
+              if (i > 0 && nums[i] == nums[i - 1]) continue;
+              if (nums[i] + maxSum3 < target) continue;
+              for (int j = i + 1;j < N - 2; ++j) {
+                  if (2 * (nums[i] + nums[j]) > target) break;
+                  if (j > i + 1 && nums[j - 1] == nums[j]) continue;
+                  if (nums[i] + nums[j] + maxSum2 < target) continue;
+                  int t = target - nums[i] - nums[j];
+                  int l = j + 1;
+                  int r = N - 1;
+                  while (l < r) {
+                      if (nums[l] + nums[r] > t) {
+                          --r;
+                      } else if (nums[l] + nums[r] < t) {
+                          ++l;
+                      } else {
+                          res.push_back({nums[i], nums[j], nums[l], nums[r]});
+                          while (l < r && nums[l] == nums[++l]);
+                          while (l < r && nums[r] == nums[--r]);
+                      }
+                  }
+              }
+          }
+          return res;
+      }
+  };
+  ```
+
+---
 
 * #### 寻找两个有序数组的中位数 ：给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。你可以假设 nums1 和 nums2 不会同时为空。（leetcode 4)
 
@@ -1493,9 +1667,9 @@ public:
 
 ---
 
-### 数组操作
+### 四. 数组操作
 
-数组操作通常会进行反转、部分的增删或者替换等，通常较为简单，但是需要注意边界条件。
+数组操作通常会进行反转、部分的增删或者替换等，通常较为简单，但是需要注意边界条件。除此之外还有一类数组映射题，这一类一般BFS或DFS处理。
 
 - #### [整数反转](https://leetcode.cn/problems/reverse-integer/)：给出一个 32 位的有符号整数，你需要将这个整数中每位上的数字进行反转。（leetcode 7）**
 
@@ -1523,26 +1697,196 @@ public:
 - #### [字符串转换整数 (atoi)](https://leetcode.cn/problems/string-to-integer-atoi/)：请你来实现一个 `myAtoi(string s)` 函数，使其能将字符串转换成一个 32 位有符号整数（类似 C/C++ 中的 `atoi` 函数）。
 
   同样也是注意边界：每个字符检测是否合法，另外检测是否超边界
+  
+  ```c
+  class Solution {
+  public:
+      int myAtoi(string str) {
+          int res = 0;
+          int i = 0;
+          int flag = 1;
+          // 1. 检查空格
+          while (str[i] == ' ') { i++; }
+          // 2. 检查符号
+          if (str[i] == '-') { flag = -1; }
+          if (str[i] == '+' || str[i] == '-') { i++; }
+          // 3. 计算数字
+          while (i < str.size() && isdigit(str[i])) {
+              int r = str[i] - '0';
+              // ------ 4. 处理溢出，这是关键步骤 ------
+              if (res > INT_MAX / 10 || (res == INT_MAX / 10 && r > 7)) { 
+                  return flag > 0 ? INT_MAX : INT_MIN;
+              }
+              // ------------------------------------
+              res = res * 10 + r;
+              i++;
+          }
+          return flag > 0 ? res : -res;
+      }
+  };
+  ```
 
+---
 
+- #### [电话号码的字母组合](https://leetcode.cn/problems/letter-combinations-of-a-phone-number/)：给定一个仅包含数字 `2-9` 的字符串，返回所有它能表示的字母组合。答案可以按 **任意顺序** 返回。
+
+  BFS或者DFS即可，随便挑一个顺手的
+
+  ```c
+  class Solution
+  {
+      vector<string> result;
+      string digits;
+      unordered_map<char, string> store;
+  
+  public:
+      vector<string> letterCombinations(string digits)
+      {
+          if (digits.empty())
+          {
+              return result;
+          }
+          this->digits = digits;
+          //储存字典
+          store = unordered_map<char, string>{
+              {'2', "abc"}, {'3', "def"}, {'4', "ghi"}, {'5', "jkl"}, {'6', "mno"}, {'7', "pqrs"}, {'8', "tuv"}, {'9', "wxyz"}};
+          dfs("", 0);
+          return result;
+      }
+  
+      void dfs(string resultStr, int index)
+      {
+          int digitsSize = int(this->digits.size());
+          if (digitsSize == index)
+          {
+              result.push_back(resultStr);
+              return;
+          }
+          char targetChar = this->digits[index];
+          string targetStr = store[targetChar];
+          for (auto tmpChar : targetStr)
+          {
+              dfs(resultStr + tmpChar, index + 1);//递归调用
+          }
+          return;
+      }
+  };
+  
+  class Solution
+  {
+      vector<string> result;
+      string digits;
+      unordered_map<char, string> store;
+  
+  public:
+      vector<string> letterCombinations(string digits)
+      {
+          if (digits.empty())
+          {
+              return result;
+          }
+          this->digits = digits;
+          //储存字典
+          store = unordered_map<char, string>{
+              {'2', "abc"}, {'3', "def"}, {'4', "ghi"}, {'5', "jkl"}, {'6', "mno"}, {'7', "pqrs"}, {'8', "tuv"}, {'9', "wxyz"}};
+  
+          queue<string> workQueue;
+          workQueue.push("");
+          for (auto targetChar : digits)
+          {
+              string targetStr = store[targetChar];
+              int queueSize = int(workQueue.size());
+              //当前层，进行添加字符
+              for (int i = 0; i < queueSize; ++i)
+              {
+                  string tmpStr = workQueue.front();
+                  workQueue.pop();
+                  for (auto tmpChar : targetStr)
+                  {
+                      workQueue.push(tmpStr + tmpChar);
+                  }
+              }
+          }
+          while (!workQueue.empty())
+          {
+              string tmpStr = workQueue.front();
+              workQueue.pop();
+              result.push_back(tmpStr);
+          }
+          return result;
+      }
+  };
+  ```
+
+---
+
+- #### [删除有序数组中的重复项](https://leetcode.cn/problems/remove-duplicates-from-sorted-array/)：给你一个 升序排列 的数组 nums ，请你 原地 删除重复出现的元素，使每个元素 只出现一次 ，返回删除后数组的新长度。元素的 相对顺序 应该保持 一致 。
+
+  对已经排序好的数组，我们采取双指针法，检测到不同的元素再和相同元素第二位进行互换，然后指针前进即可
+
+  ```c
+  class Solution {
+  public:
+      int removeDuplicates(vector<int>& nums) {
+          if (nums.size() == 0) 
+              return 0;
+          int i = 0;
+          for (int j = 1; j < nums.size(); j++) 
+          {
+              if (nums[j] != nums[i]) 
+              {
+                  i++;
+                  nums[i] = nums[j];
+              }
+          }
+          return i + 1;
+      }
+  };
+  ```
+
+---
+
+- #### [移除元素](https://leetcode.cn/problems/remove-element/)：给你一个数组 `nums` 和一个值 `val`，你需要 **[原地](https://baike.baidu.com/item/原地算法)** 移除所有数值等于 `val` 的元素，并返回移除后数组的新长度。
+
+  对每个满足条件的元素赋值给后面不同的元素。但是注意这里需要保证不会重复赋值，因此比较可行的方法是进行节点的交换：我们只要每次把不同于val的值赋值在前列就可以完成了。为了优化，我们可以将重复的值替换为末尾的值， 并且不再检查它。
+
+  ```c
+  class Solution {
+  public:
+  	int removeElement(vector<int>& nums, int val) {
+          int i = 0;
+          int n = nums.size();
+          while (i < n) {
+              if (nums[i] == val) {
+                  nums[i] = nums[n - 1];
+                  // reduce array size by one
+                  n--;
+              } else {
+                  i++;
+              }
+          }
+          return n;
+  	}
+  };
+  ```
 
 
 
 ---
 
-### 匹配问题
+### 五. 匹配问题
 
 字符串匹配包括单模式串匹配和多模式串匹配。单模式串匹配指的是一个串跟一个串进行匹配，常用的有BF, RK, BM, KMP算法，另一种则是在一个串中同时查找多个串，它们分别是 Trie 树和 AC 自动机。
 
-### 一. 单模式串匹配
+#### 1. 单模式串匹配
 
-#### 1. BF算法
+##### 1. BF算法
 
 ​	BF 算法中的 BF 是 Brute Force 的缩写，中文叫作暴力匹配算法，也叫朴素匹配算法。从名字可以看出，这种算法的字符串匹配方式很“暴力”，当然也就会比较简单、好懂，但相应的性能也不高。
 
 ​	暴力搜索正如其名，从头到尾轮询，检查起始位置分别是 0、1、2…n-m 且长度为 m 的 n-m+1 个子串，看有没有跟模式串匹配的。尽管理论上，BF 算法的时间复杂度很高，是 O(n*m)，但在实际的开发中，它却是一个比较常用的字符串匹配算法。第一，实际的软件开发中，大部分情况下，模式串和主串的长度都不会太长。第二，朴素字符串匹配算法思想简单，代码实现也非常简单。
 
-#### 2. RK算法
+##### 2. RK算法
 
 ​	Rabin-Karp 算法，属于BF算法的升级版。
 
@@ -1550,7 +1894,7 @@ public:
 
 ​	提高哈希算法计算子串哈希值效率的做法：用一个 K 进制数来表示一个子串，这个 K 进制数转化成十进制数，作为子串的哈希值
 
-#### 3. BM（Boyer-Moore）算法
+##### 3. BM（Boyer-Moore）算法
 
 ​	BM算法是一种非常高效的字符串匹配算法，**可用于文本编辑器中的查找替换功能**
 
@@ -1564,7 +1908,7 @@ public:
 
   我们把已经匹配的部分叫作好后缀，记作{u}。我们拿它在模式串中查找，如果找到了另一个跟{u}相匹配的子串{u\*}，那我们就将模式串滑动到子串{u*}与主串中{u}对齐的位置。如果找不到，我们不仅要看好后缀在模式串中，是否有另一个匹配的子串，我们还要考察好后缀的后缀子串，是否存在跟模式串的前缀子串匹配的。找一个最长的并且能跟模式串的前缀子串匹配的，假设是{v}，然后将模式串滑动到匹配位置。
 
-#### 4. KMP算法
+##### 4. KMP算法
 
 ​	KMP 算法的核心思想，跟上一节讲的 BM 算法非常相近。我们假设主串是 a，模式串是 b。在模式串与主串匹配的过程中，当遇到不可匹配的字符的时候，我们希望找到一些规律，可以将模式串往后多滑动几位，跳过那些肯定不会匹配的情况
 
@@ -1574,7 +1918,7 @@ public:
 
 ​	类似 BM 算法中的 bc、suffix、prefix 数组，KMP 算法也可以提前构建一个数组，用来存储模式串中每个前缀（这些前缀都有可能是好前缀）的最长可匹配前缀子串的结尾字符下标。我们把这个数组定义为 next 数组，很多书中还给这个数组起了一个名字，叫失效函数（failure function）。
 
-### 二. 多模式匹配
+#### 2. 多模式匹配
 
 #### 1. Trie树（搜索引擎提示功能）
 
@@ -1586,15 +1930,17 @@ public:
 
 ​	关于next数组的实现过程，[看这里](https://www.bilibili.com/video/BV1uJ411Y7Eg?p=4)
 
+#### 3. 正则匹配
+
+[动态规划](https://leetcode.cn/problems/regular-expression-matching/solution/by-flix-musv/)是解决该类匹配问题的通用解法。
+
+[72. 编辑距离](https://leetcode-cn.com/problems/edit-distance/)，[115. 不同的子序列](https://leetcode-cn.com/problems/distinct-subsequences/)，[583. 两个字符串的删除操作](https://leetcode-cn.com/problems/delete-operation-for-two-strings/)，[1143. 最长公共子序列](https://leetcode-cn.com/problems/longest-common-subsequence/)
+
 ---
 
-* #### 正则表达式匹配：给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 ‘.’ 和 ‘\*’ 的正则表达式匹配。‘.’ 匹配任意单个字符，‘*’ 匹配零个或多个前面的那一个元素。所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。（leet code 10)
+* #### [正则表达式匹配](https://leetcode.cn/problems/regular-expression-matching/)：给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 ‘.’ 和 ‘\*’ 的正则表达式匹配。‘.’ 匹配任意单个字符，‘*’ 匹配零个或多个前面的那一个元素。所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。（leetcode 10)
 
-  说明:s 可能为空，且只包含从 a-z 的小写字母。p 可能为空，且只包含从 a-z 的小写字母，以及字符 . 和 *。
-
-
-
-**采用从后向前检索的方式进行**
+  **动态规划，可解决一众字符串匹配问题。另外，就本题来说，采用从后向前检索的方式进行相对来说会更容易**
 
 ```cpp
 class Solution 
@@ -1645,7 +1991,7 @@ public:
 
 ---
 
-* #### 通配符匹配：给定一个字符串 (s) 和一个字符模式 § ，实现一个支持 ‘?’ 和 ‘`*`’ 的通配符匹配。‘?’ 可以匹配任何单个字符。‘`*`’ 可以匹配任意字符串（包括空字符串）。两个字符串完全匹配才算匹配成功。
+* #### 通配符匹配：给定一个字符串 (s) 和一个字符模式 § ，实现一个支持 ‘?’ 和 ‘`*`’ 的通配符匹配。‘?’ 可以匹配任何单个字符。‘`*`’ 可以匹配任意字符串（包括空字符串）。两个字符串完全匹配才算匹配成功。(leetcode 44)
 
   本题中？其实不用在意，s和p指针自增略过即可，但是`\*`需要着重考虑，因为可以代替任意长度。这里有一个容易出现的误区，如果匹配让`\*`后一个字符等于s中判断位置之后第一个值则会出现错误。所以这里需要记录星号所在位置，然后继续自增s匹配下一处相同的值
 
@@ -1674,11 +2020,15 @@ public:
 
 ---
 
-* #### 有效的括号：给定一个只包括 ‘(’，’)’，’{’，’}’，’[’，’]’ 的字符串，判断字符串是否有效。
+### 六. 特定规则的检索
 
-有效字符串需满足：左括号必须用相同类型的右括号闭合。左括号必须以正确的顺序闭合。
+常见的如判断字符串、数组是否满足一定条件，如括号匹配等，可以用栈来做。
 
-本题采用栈比较容易解决：对左半边括号采取入栈操作，右半边括号和栈顶进行对比，如果不一致则说明有问题
+* #### [有效的括号](https://leetcode.cn/problems/valid-parentheses/)：给定一个只包括 ‘(’，’)’，’{’，’}’，’[’，’]’ 的字符串，判断字符串是否有效。(leetcode 20)
+
+  有效字符串需满足：左括号必须用相同类型的右括号闭合。左括号必须以正确的顺序闭合。
+
+  本题采用栈比较容易解决：对左半边括号采取入栈操作，右半边括号和栈顶进行对比，如果不一致则说明有问题
 
   ```cpp
   class Solution 
@@ -1714,7 +2064,7 @@ public:
 
 ---
 
-* #### 括号生成：给出 n 代表生成括号的对数，请你写出一个函数，使其能够生成所有可能的并且有效的括号组合。（leet code 22)
+* #### [括号生成](https://leetcode.cn/problems/generate-parentheses/)：给出 n 代表生成括号的对数，请你写出一个函数，使其能够生成所有可能的并且有效的括号组合。（leet code 22)
 
   对于此类问题回溯法显然可解
 
@@ -1758,12 +2108,10 @@ public:
   
   ```
 
+  更优秀的解法为动态规划：
   
-
-更优秀的解法为动态规划：
-
-**核心思想**
-
+  **核心思想**
+  
 * 对与 `i=n` 的情况，我们考虑整个括号排列中最左边的括号
 
 * 最左边的括号一定是左括号
@@ -1844,3 +2192,90 @@ public:
   
   ```
 
+---
+
+- #### [删除最外层的括号](https://leetcode.cn/problems/remove-outermost-parentheses/)：给出一个非空有效字符串 s，考虑将其进行原语化分解，使得：s = P_1 + P_2 + ... + P_k，其中 P_i 是有效括号字符串原语。对 s 进行原语化分解，删除分解中每个原语字符串的最外层括号，返回 s 。
+
+  也是栈来做。但是这里其实只用记录括号计数，所以用一个计数器就足矣。
+
+  ```c
+  class Solution {
+  public:
+      string removeOuterParentheses(string s) {
+          int level = 0;
+          string res;
+          for (auto c : s) {
+              if (c == ')') {
+                  level--;
+              }
+              if (level) {
+                  res.push_back(c);
+              }
+              if (c == '(') {
+                  level++;
+              }
+          }
+          return res;
+      }
+  };
+  ```
+
+---
+
+- #### [最长公共前缀](https://leetcode.cn/problems/longest-common-prefix/)：编写一个函数来查找字符串数组中的最长公共前缀。(leetcode 14)
+
+  最简单的办法就是循环迭代查找，该方法时间复杂度和空间复杂度均很低，而且容易想到。除此之外，还可以使用分治的方法，但是结果并没有更优秀
+
+  ```c
+  class Solution {
+  public:
+      string longestCommonPrefix(vector<string>& strs) {
+  		int count = 0;
+  		int size = 0;
+  		char c;
+  		bool end = true;
+  		string ret;
+          
+  		if (strs.size() == 0)
+  			return ret;
+  
+  		vector<string>::iterator iter;
+  
+  		iter = strs.begin();
+  		while (iter != strs.end())
+  		{
+  			if (size < (*iter).size())
+  				size = (*iter).size();
+  			iter++;
+  		}
+  
+  		while (end)
+  		{
+  			iter = strs.begin();
+  			c = (*iter)[count];
+  			while ((iter + 1) != strs.end())
+  			{
+  				iter++;
+  				if (c != (*iter)[count])
+  				{
+  					end = false;
+  					break;
+  				}
+  			}
+  
+  			if (end)
+  			{
+  				ret += c;
+  				count++;
+  			}	
+  
+  			if (count >= size)
+  				return ret;
+  		}
+  
+  		return ret;
+      }
+  };
+  ```
+
+  

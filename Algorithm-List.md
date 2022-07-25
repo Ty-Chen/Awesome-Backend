@@ -4,6 +4,8 @@
 
 ### 基本操作
 
+单链表、多链表的遍历、增删查找以及链表间的交换等。
+
 ---
 
 * #### LRU缓存淘汰算法
@@ -166,7 +168,7 @@
 
 -----
 
-* #### 删除链表的倒数第N个节点：给定一个链表，删除链表的倒数第 n 个节点，并且返回链表的头结点。（leet code 19)
+* #### [删除链表的倒数第N个节点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/)：给定一个链表，删除链表的倒数第 n 个节点，并且返回链表的头结点。（leet code 19)
 
   采用双指针滑动：两个指针相距为n，则尾指针到结束了表示首指针为倒数第n个节点
 
@@ -212,7 +214,162 @@ public:
 
 ---
 
-* #### k个一组翻转链表：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+- #### [合并两个有序链表](https://leetcode.cn/problems/merge-two-sorted-lists/)：将两个升序链表合并为一个新的 **升序** 链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。 
+
+  不断判断两个链表的值然后指针拼接即可。
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+          ListNode *preHead, *ptr;
+  
+          preHead = new ListNode(-1);
+          ptr = preHead;
+  
+          while (l1 != NULL && l2 != NULL)
+          {
+              if (l1->val <= l2->val)
+              {         
+                  ptr->next = l1;    
+                  l1 = l1->next;                                 
+              }
+              else
+              {
+                  ptr->next = l2;
+                  l2 = l2->next;
+              }
+              ptr = ptr->next;
+          }
+  
+          ptr->next = (l1 == NULL? l2 : l1);
+  
+          return preHead->next;
+      }
+  };
+  ```
+
+---
+
+- #### [合并K个升序链表](https://leetcode.cn/problems/merge-k-sorted-lists/)：给你一个链表数组，每个链表都已经按升序排列。请你将所有链表合并到一个升序链表中，返回合并后的链表。
+
+  采用二分法逐个合并直至剩下一个即可
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* mergeKLists(vector<ListNode*>& lists) {
+          int size = lists.size();
+          if (size == 0) {
+              return nullptr;
+          }
+          if (size == 1) {
+              return lists[0];
+          }
+          
+          while (size > 1)
+          {               
+              for (int i = 0; i < size / 2; i++)
+              {
+                  lists[i] = mergeTwoLists(lists[i], lists[i + size / 2]);
+              }
+              if (size % 2)
+              {
+                   lists[size / 2] = lists[size - 1];
+                   size = size / 2 + 1;               
+              }
+              else
+              {
+                  size = size / 2;
+              }
+          }
+  
+          return lists[0];
+      }
+  
+      ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+          ListNode *preHead, *ptr;
+  
+          preHead = new ListNode(-1);
+          ptr = preHead;
+  
+          while (l1 != NULL && l2 != NULL)
+          {
+              if (l1->val <= l2->val)
+              {         
+                  ptr->next = l1;    
+                  l1 = l1->next;                                 
+              }
+              else
+              {
+                  ptr->next = l2;
+                  l2 = l2->next;
+              }
+              ptr = ptr->next;
+          }
+  
+          ptr->next = (l1 == NULL? l2 : l1);
+  
+          return preHead->next;
+      }
+  };
+  ```
+
+---
+
+- #### [两两交换链表中的节点](https://leetcode.cn/problems/swap-nodes-in-pairs/)：给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* swapPairs(ListNode* head) {
+          ListNode *preHead = new ListNode(-1);
+          ListNode *tmp, *ahead;
+  
+          preHead->next = head;
+          ahead = preHead;
+          while (head != NULL && head->next != NULL)
+          {
+              tmp = head->next;
+              ahead->next = tmp;
+              head->next = tmp->next;
+              tmp->next = head;
+              ahead = head;            
+              head = head->next;
+          }
+  
+          return preHead->next;
+      }
+  };
+  ```
+
+---
+
+* #### [k个一组翻转链表](https://leetcode.cn/problems/reverse-nodes-in-k-group/)：给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
 
   为了翻转K个一组，则需要遍历k个，让每一个指针指向前一个节点，然后最前面的节点指向下一组的开始。因此考虑迭代解决
 
