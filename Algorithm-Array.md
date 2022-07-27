@@ -1474,8 +1474,6 @@ public:
 
   使用二分法解决。本题的难点在于数组进行了一次不确定位置的旋转，但是旋转后依然是两部分升序的组合，这就存在一个必然性：旋转点假设为a和b之间，则b成为了新数组第一个数，a成为了末尾数。因为b大于a和a之前的数，所以我们判断中间点如果小于b，则证明旋转后的片段小于一半，即在左边，否则在右边。
 
-
-
 ```cpp
 class Solution {
 public:
@@ -1663,6 +1661,99 @@ public:
       }
   };
   
+  ```
+
+---
+
+- #### [在排序数组中查找元素的第一个和最后一个位置](https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/)：给你一个按照非递减顺序排列的整数数组 `nums`，和一个目标值 `target`。请你找出给定目标值在数组中的开始位置和结束位置。
+
+  二分法解题
+
+  ```c
+  class Solution {
+  public:
+      vector<int> searchRange(vector<int>& nums, int target) {
+  
+          if (nums.size() == 0)
+              return {-1, -1};
+  
+          int begin = 0, end = nums.size() - 1;
+  
+          if (nums[begin] > target || nums[end] < target)
+              return {-1, -1};
+  
+          while (begin <= end)
+          {
+              if (nums[begin] == target && nums[end] == target)
+              {
+                  vector<int> ret = {begin, end};
+                  return ret;
+              }
+  
+              int mid = (begin + end) / 2; 
+              if (nums[mid] < target)
+                  begin = mid + 1;
+              else if (nums[mid] > target)
+                  end = mid - 1;
+              else
+              {
+                  begin = mid;
+                  end = mid;
+                  while (begin >= 0 && nums[begin] == target)
+                  {
+                      begin--;
+                  }
+                  while (end < nums.size() && nums[end] == target)
+                  {
+                      end++;
+                  }
+                  vector<int> ret = {begin + 1, end - 1};
+                  return ret;               
+              }
+  
+              if (nums[begin] > target || nums[end] < target)
+              {
+                  return {-1, -1};
+              }
+          }
+  
+          return {-1, -1};
+      }
+  };
+  
+  ```
+
+---
+
+- #### [搜索插入位置](https://leetcode.cn/problems/search-insert-position/)：给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+
+  二分法解题
+
+  ```c
+  class Solution {
+  public:
+      int searchInsert(vector<int>& nums, int target) {
+          if (nums.size() == 0 || nums[0] > target)
+              return 0;
+          
+          int begin = 0, end = nums.size() - 1;
+          if (nums[end] < target)
+              return end + 1;
+  
+          while (begin <= end)
+          {
+              int mid = (begin + end) / 2;
+              if (nums[mid] == target)
+                  return mid;
+              else if (nums[mid] < target)
+                  begin = mid + 1;
+              else 
+                  end = mid - 1;
+          }
+          
+          return nums[begin] > target ? begin : begin + 1;
+      }
+  };
   ```
 
 ---
@@ -1870,6 +1961,48 @@ public:
   };
   ```
 
+---
+
+- #### [下一个排列](https://leetcode.cn/problems/next-permutation/)：整数数组的 **下一个排列** 是指其整数的下一个字典序更大的排列。给你一个整数数组 `nums` ，找出 `nums` 的下一个排列。
+
+  本题的主要思路是倒叙查找到第一个不满足递减的数，然后与右侧比它大的最少的数交换，之后右侧排序获得最小排列，即为下一个更大的排列
+
+  ```c
+  class Solution {
+  public:
+      void nextPermutation(vector<int>& nums) {
+          int size = nums.size();
+          int ptr = nums[size - 1];
+  
+          for (int i = size - 2; i >= 0; i--)
+          {
+              //找到了一个比右侧小的数
+              if (nums[i] < ptr)
+              {
+                  //找到它在右侧的位置并替换
+                  for (int j = size - 1; j >= i + 1; j--)
+                  {
+                      if (nums[j] > nums[i])
+                      {
+                          int tmp = 0;
+                          tmp = nums[j];
+                          nums[j] = nums[i];
+                          nums[i] = tmp;
+                          sort(nums.begin() + i + 1, nums.end());
+                          break;
+                      }
+                  }
+                  return;
+              }
+              else
+                  ptr = nums[i];
+          }
+  
+          sort(nums.begin(), nums.end());
+      }
+  };
+  ```
+
 
 
 ---
@@ -1917,6 +2050,83 @@ public:
 ​	我们只需要拿好前缀本身，在它的后缀子串中，查找最长的那个可以跟好前缀的前缀子串匹配的。假设最长的可匹配的那部分前缀子串是{v}，长度是 k。我们把模式串一次性往后滑动 j-k 位，相当于，每次遇到坏字符的时候，我们就把 j 更新为 k，i 不变，然后继续比较。
 
 ​	类似 BM 算法中的 bc、suffix、prefix 数组，KMP 算法也可以提前构建一个数组，用来存储模式串中每个前缀（这些前缀都有可能是好前缀）的最长可匹配前缀子串的结尾字符下标。我们把这个数组定义为 next 数组，很多书中还给这个数组起了一个名字，叫失效函数（failure function）。
+
+---
+
+- #### [串联所有单词的子串](https://leetcode.cn/problems/substring-with-concatenation-of-all-words/)：给定一个字符串 `s` 和一些 **长度相同** 的单词 `words` **。**找出 `s` 中恰好可以由 `words` 中所有单词串联形成的子串的起始位置。
+
+  本题主要在于关注以下几点：
+  （1）完全匹配意味着寻找s中长度为words总长的窗口，采用滑动窗口进行处理
+  （2）由于串联顺序并未规定，因此采用哈希表是很合理的做法
+  （3）哈希表中key为单次，value为words中出现次数，滑动窗口去查找目前有多少个该类单次，如果恰好满足则数量+1
+
+  ```c
+  class Solution {
+  public:
+      vector<int> findSubstring(string s, vector<string> &words) {
+          //特殊情况直接排除
+          if(s.empty() || words.empty())
+              return {};
+          
+          //存放结果的数组
+          vector<int> result;
+          
+          //单词数组中的单词的大小，个数，以及总长度
+          int one_word = words[0].size();
+          int word_num = words.size();
+          //int all_len = one_word * word_num;
+          
+          //建立单词->单词个数的映射
+          unordered_map<string, int> m1;
+          for(const auto &w:words)
+              m1[w]++;
+          
+          for(int i = 0; i < one_word; ++i)
+          {
+              //left和rigth表示窗口的左右边界，count用来统计匹配的单词个数
+              int left = i, right = i, count = 0;
+              
+              unordered_map<string, int> m2;
+              
+              //开始滑动窗口
+              while(right + one_word <= s.size())
+              {
+                  //从s中提取一个单词拷贝到w
+                  string w = s.substr(right, one_word);
+                  right += one_word;//窗口右边界右移一个单词的长度
+                  
+                  if(m1.count(w) == 0)
+                  {//此单词不在words中，表示匹配不成功,然后重置单词个数、窗口边界、以及m2
+                      count = 0;
+                      left = right;
+                      m2.clear();
+                  }
+                  else
+                  {//该单词匹配成功，添加到m2中
+                      m2[w]++;
+                      count++;    
+                      while(m2.at(w) > m1.at(w))//一个单词匹配多次，需要缩小窗口，也就是left右移
+                      {
+                          string t_w = s.substr(left, one_word);
+                          count--;
+                          m2[t_w]--;
+                          left += one_word;
+                      }
+                      if(count == word_num)
+                          result.push_back(left);
+                  }
+              }
+          }
+          return result;
+      }
+  };
+  ```
+
+---
+
+
+
+---
 
 #### 2. 多模式匹配
 
