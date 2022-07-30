@@ -162,6 +162,71 @@
 
 ---
 
+- #### [合并区间](https://leetcode.cn/problems/merge-intervals/)：以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。请你合并所有重叠的区间，并返回 一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间 。
+
+  本题有两种思路：第一种是先对区间排序，然后逐个判断；第二种是将所有的区间映射到“线段”上，再输出“线段”即可
+
+  ```c
+  class Solution {
+  public:
+      vector<vector<int>> merge(vector<vector<int>>& intervals) {
+          vector<vector<int>> res;
+          if(intervals.empty()) return res;
+  
+          auto cmp = [](vector<int> &a, vector<int> &b) {return a[0] < b[0];};
+          sort(intervals.begin(), intervals.end(), cmp);
+  
+          res.emplace_back(intervals[0]);
+          for(int i = 1; i < intervals.size(); i++) {
+              int bk = res.size() - 1;
+              if(res[bk][1] >= intervals[i][0]) {
+                  if(res[bk][1] < intervals[i][1]) {
+                      res[bk][1] = intervals[i][1];
+                  } 
+              } else {
+                  res.emplace_back(intervals[i]);
+              }
+          }
+  
+          return res; 
+      }
+  };
+  ```
+
+---
+
+- #### [插入区间](https://leetcode.cn/problems/insert-interval/)：给你一个 **无重叠的** *，*按照区间起始端点排序的区间列表。在列表中插入一个新的区间，你需要确保列表中的区间仍然有序且不重叠（如果有必要的话，可以合并区间）。
+
+  一次遍历然后按情况插入新区间
+
+  ```c
+  class Solution {
+  public:
+      vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {
+  		intervals.push_back(newInterval);
+          sort(intervals.begin(), intervals.end());
+          vector<vector<int>> ans{intervals[0]};
+          int n = intervals.size();
+          for(int i = 0; i < n; i ++){
+              if(ans.back()[1] >= intervals[i][0]){
+                  ans.back()[1] = max(intervals[i][1], ans.back()[1]);
+                  continue;
+              }
+              else{
+                  ans.push_back(intervals[i]);
+                  continue;
+              }
+          }
+          return ans;
+          
+      }
+  };
+  ```
+
+
+
+---
+
 #### 2. 动态规划
 
 * #### 求最大子串和
