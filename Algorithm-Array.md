@@ -157,7 +157,6 @@
           return max_area;
       }
   };
-  
   ```
 
 ---
@@ -2002,6 +2001,34 @@ public:
 
 ---
 
+- #### [删除有序数组中的重复项 II](https://leetcode.cn/problems/remove-duplicates-from-sorted-array-ii/)：给你一个有序数组 `nums` ，请你**[ 原地](http://baike.baidu.com/item/原地算法)** 删除重复出现的元素，使得出现次数超过两次的元素**只出现两次** ，返回删除后数组的新长度。
+
+  和上题类似，区别是可以重复2次，加个判断
+
+  ```c
+  class Solution {
+  public:
+      int removeDuplicates(vector<int>& nums) {
+          int n = nums.size();
+          if(n <= 2)
+          {
+              return n;
+          }
+          int sp = 1;
+          for(int fp = 2; fp < n; fp++)
+          {
+              if(nums[fp] != nums[sp - 1])
+              {
+                  nums[++sp] = nums[fp];
+              }
+          }
+          return sp + 1;
+      }
+  };
+  ```
+
+---
+
 - #### [移除元素](https://leetcode.cn/problems/remove-element/)：给你一个数组 `nums` 和一个值 `val`，你需要 **[原地](https://baike.baidu.com/item/原地算法)** 移除所有数值等于 `val` 的元素，并返回移除后数组的新长度。
 
   对每个满足条件的元素赋值给后面不同的元素。但是注意这里需要保证不会重复赋值，因此比较可行的方法是进行节点的交换：我们只要每次把不同于val的值赋值在前列就可以完成了。为了优化，我们可以将重复的值替换为末尾的值， 并且不再检查它。
@@ -2067,6 +2094,40 @@ public:
       }
   };
   ```
+
+---
+
+- #### [颜色分类](https://leetcode.cn/problems/sort-colors/)：给定一个包含红色、白色和蓝色、共 n 个元素的数组 nums ，原地对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。
+
+  两个指针指向0的最右边界和2的最左边界，再用一个指针从头到尾遍历，然后交换0，1，2的位置即可
+
+  ```c
+  class Solution {
+    public:
+    /*
+    荷兰三色旗问题解
+    */
+    void sortColors(vector<int>& nums) {
+      // 对于所有 idx < p0 : nums[idx < p0] = 0
+      // curr 是当前考虑元素的下标
+      int p0 = 0, curr = 0;
+      // 对于所有 idx > p2 : nums[idx > p2] = 2
+      int p2 = nums.size() - 1;
+  
+      while (curr <= p2) {
+        if (nums[curr] == 0) {
+          swap(nums[curr++], nums[p0++]);
+        }
+        else if (nums[curr] == 2) {
+          swap(nums[curr], nums[p2--]);
+        }
+        else curr++;
+      }
+    }
+  };
+  ```
+
+---
 
 
 
@@ -2189,7 +2250,34 @@ public:
 
 ---
 
+- #### [最小覆盖子串](https://leetcode.cn/problems/minimum-window-substring/)：给你一个字符串 `s` 、一个字符串 `t` 。返回 `s` 中涵盖 `t` 所有字符的最小子串。如果 `s` 中不存在涵盖 `t` 所有字符的子串，则返回空字符串 `""` 。
 
+  本题需要解决几个问题：1.记录t是否满足了，这个可以用一个数组计数解决。2. 如何取出最小的子串，可以用滑动窗口解决。左侧窗口用于收紧大小，右侧用于保证找到所有字母，当右侧滑动到找到了，则判断左侧是否可以缩小，缩到不满足条件了，右侧再继续动。
+
+  ```c
+  class Solution {
+  public:
+      string minWindow(string s, string t) {
+          int count[256] = { 0 };
+          for (auto c : t) ++count[c];
+          int len = 0, minLength = s.length();
+          string res;
+          for (int l = 0, r = 0; r < s.length(); ++r) {
+              if (--count[s[r]] >= 0) ++len;
+              while (len == t.length()) {
+                  if (r - l + 1 <= minLength) {
+                      minLength = r - l + 1;
+                      res = s.substr(l, r - l + 1);
+                  }
+                  if (++count[s[l++]] > 0) --len;
+              }
+          }
+          return res;        
+      }
+  };
+  ```
+
+  
 
 ---
 

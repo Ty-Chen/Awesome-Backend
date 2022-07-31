@@ -454,4 +454,95 @@ public:
 
 ---
 
+- #### [删除排序链表中的重复元素](https://leetcode.cn/problems/remove-duplicates-from-sorted-list/)：给定一个已排序的链表的头 `head` ， *删除所有重复的元素，使每个元素只出现一次* 。返回 *已排序的链表* 。
+
+  已排序，那就遍历删除就完事了
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* deleteDuplicates(ListNode* head) 
+      {
+      if(head == NULL)  //如果所给链表为空直接返回，否则在执行ptr->next这部操作时会因为ptr为NULL而造成执行时错误
+          return head;
+  	ListNode* ptr{ head };  //遍历的指针
+  	while (ptr->next != NULL)  //遍历首个元素到第倒数第二个元素，因为是逐个向后比较，最后一个元素会被比较到，这样是正确的
+  	{
+  		if (ptr->val == ptr->next->val)  //和后一个元素比较
+  		{
+  			ListNode* p = ptr->next;  
+  			ptr->next = p->next;  //删除操作
+  			delete p;  //释放空间
+  		}
+  		else
+  		{
+  			ptr = ptr->next;  //移动到后一个元素
+  		}
+  	}
+  	return head;  //返回首个节点
+      }
+  };
+  ```
+
+---
+
+- #### [删除排序链表中的重复元素 II](https://leetcode.cn/problems/remove-duplicates-from-sorted-list-ii/)：给定一个已排序的链表的头 `head` ， *删除原始链表中所有重复数字的节点，只留下不同的数字* 。返回 *已排序的链表* 。
+
+  和上题类似，但是需要全删，因为是排好序的链表，所以有头指针+遍历，一遍就够了
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* deleteDuplicates(ListNode* head) {
+          if (head == NULL)
+              return head;
+          ListNode *ptr = head, *last;
+          ListNode *ahead = new ListNode(-1);
+          ahead->next = head;
+          last = ahead;
+          
+          while (ptr->next != NULL)
+          {
+              if (ptr->val == ptr->next->val)
+              {
+                  while (ptr->next != NULL && ptr->val == ptr->next->val)
+                  {
+                      ptr = ptr->next;
+                  }
+                  last->next = ptr->next;
+                  ptr = ptr->next;
+                  if (ptr == NULL)
+                      return ahead->next;
+              }
+              else
+              {
+                  last = ptr;
+                  ptr = ptr->next;
+              }
+          }
+          return ahead->next;
+      }
+  };
+  ```
+
+
+
+---
+
 ### 复杂题
