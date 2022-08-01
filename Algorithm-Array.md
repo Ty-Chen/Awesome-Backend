@@ -499,6 +499,29 @@ class Solution {
 
 ---
 
+- #### [解码方法](https://leetcode.cn/problems/decode-ways/)：给你一个只含数字的 **非空** 字符串 `s` ，请计算并返回 **解码** 方法的 **总数** 。
+
+  解码其实就是将A-Z翻译成1到26，但是因为两位数可以翻译成一个字母或者两个字母，有两种可能性。因此本题很明显可以用动态规划求解。数字小于26大于0，则dp[i] = dp[i - 1] + dp[i - 2]，否则dp[i] = dp[i - 2]
+
+  ```c
+  class Solution {
+  public:
+  int numDecodings(string s) {
+      if (s[0] == '0') return 0;
+      int pre = 1, curr = 1;//dp[-1] = dp[0] = 1
+      for (int i = 1; i < s.size(); i++) {
+          int tmp = curr;
+          if (s[i] == '0')
+              if (s[i - 1] == '1' || s[i - 1] == '2') curr = pre;
+              else return 0;
+          else if (s[i - 1] == '1' || (s[i - 1] == '2' && s[i] >= '1' && s[i] <= '6'))
+              curr = curr + pre;
+          pre = tmp;
+      }
+      return curr;
+  }
+  };
+  ```
 
 ---
 
