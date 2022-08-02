@@ -4,10 +4,11 @@
 
 * #### 二叉树遍历
 
-  遍历包括前序中序后续，都很简单。写法包括递归和栈，递归太简单不写了，栈下所示
+  遍历包括前序中序后续，都很简单。写法包括递归和栈，如下所示
 
   ```cpp
-      vector<int> preorderTraversal(TreeNode* root) 
+  //前序遍历是中左右，推右儿子入栈，打印当前值，访问左儿子
+  vector<int> preorderTraversal(TreeNode* root) 
       {
           stack<TreeNode*> S;
           vector<int> v;
@@ -20,12 +21,15 @@
                   v.push_back(rt->val);
                   rt=rt->left;
               }
-              rt=S.top();S.pop();
+              rt=S.top();
+              S.pop();
           }
           return v;        
       }
   
   
+  // 后续遍历顺序是左右中，为了方便栈记录所以记录成中右左，然后颠倒数组
+  // 所以推左儿子入栈，记录当前值，访问右儿子
       vector<int> postorderTraversal(TreeNode* root) 
       {
           stack<TreeNode*> S;
@@ -39,12 +43,14 @@
                   v.push_back(rt->val);
                   rt=rt->right;
               }
-              rt=S.top();S.pop();
+              rt=S.top();
+              S.pop();
           }
           reverse(v.begin(),v.end());
           return v;
       }
   
+  // 中序遍历是左中右，推左儿子入栈直到最后，打印当前值，访问右儿子
       vector<int> inorderTraversal(TreeNode* root) 
       {
           stack<TreeNode*> S;
@@ -57,16 +63,38 @@
                   S.push(rt);
                   rt=rt->left;
               }
-              rt=S.top();S.pop();
+              rt=S.top();
+              S.pop();
               v.push_back(rt->val);
-              rt=rt->right;
+            rt=rt->right;
           }
           return v;        
       }
   
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+      vector<int> ret;
+  public:
+      vector<int> inorderTraversal(TreeNode* root) {
+          if(root) {
+              inorderTraversal(root->left);
+              ret.push_back(root->val);
+              inorderTraversal(root->right);
+          }
+          return ret;
+      }
+  };
   
   ```
-
+  
   
 
 -----

@@ -541,7 +541,51 @@ public:
   };
   ```
 
+---
 
+- #### [反转链表 II](https://leetcode.cn/problems/reverse-linked-list-ii/)：给你单链表的头指针 head 和两个整数 left 和 right ，其中 left <= right 。请你反转从位置 left 到位置 right 的链表节点，返回 反转后的链表 。
+
+  比起逆转链表，就是多了一个先遍历left而已。
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode* reverseBetween(ListNode* head, int m, int n) {  
+          ListNode *dummy = new ListNode(-1);
+          dummy->next = head;
+  
+          // 第m-1个节点
+          ListNode *pre=dummy;
+          for(int i=1; i<m; i++){
+              pre = pre->next;
+          }
+  
+          // 第m个节点
+          ListNode *t, *cur=pre->next, *mNode=pre->next;
+          // 头插法
+          for(int i=m; i<=n; i++){
+              t = cur->next;
+              cur->next = pre->next;
+              pre->next = cur;
+              cur = t;
+          }
+          // 第m个节点指向第n+1个节点
+          mNode->next = cur;
+          
+          return dummy->next;
+      }
+  };
+  ```
+
+  
 
 ---
 
