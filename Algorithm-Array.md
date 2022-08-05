@@ -595,6 +595,33 @@ class Solution {
 
 ---
 
+* #### [三角形最小路径和](https://leetcode.cn/problems/triangle/)：给定一个三角形 triangle ，找出自顶向下的最小路径和。每一步只能移动到下一行中相邻的结点上。相邻的结点 在这里指的是 下标 与 上一层结点下标 相同或者等于 上一层结点下标 + 1 的两个结点。也就是说，如果正位于当前行的下标 i ，那么下一步可以移动到下一行的下标 i 或 i + 1 。
+
+  用 `f[i][j]` 表示从三角形顶部走到位置 `(i, j)` 的最小路径和，然后用动态规划求解。`f[i][j] = min(f[i - 1][j - 1], f[i - 1][j]) + c[i][j]`。做出来之后，考虑到i的状态只和i-1有关，所以可以降维处理。
+
+  ```c
+  class Solution {
+  public:
+      int minimumTotal(vector<vector<int>>& triangle) {
+          int n = triangle.size();
+          vector<vector<int>> f(2, vector<int>(n));
+          f[0][0] = triangle[0][0];
+          for (int i = 1; i < n; ++i) {
+              int curr = i % 2;
+              int prev = 1 - curr;
+              f[curr][0] = f[prev][0] + triangle[i][0];
+              for (int j = 1; j < i; ++j) {
+                  f[curr][j] = min(f[prev][j - 1], f[prev][j]) + triangle[i][j];
+              }
+              f[curr][i] = f[prev][i - 1] + triangle[i][i];
+          }
+          return *min_element(f[(n - 1) % 2].begin(), f[(n - 1) % 2].end());
+      }
+  };
+  ```
+
+---
+
 * #### 最长公共前缀：编写一个函数来查找字符串数组中的最长公共前缀，如果不存在公共前缀，返回空字符串。（leet code 14）
 
   最简单的办法就是循环迭代查找，该方法时间复杂度和空间复杂度均很低，而且容易想到。除此之外，还可以使用分治的方法，但是结果并没有更优秀
@@ -1844,6 +1871,138 @@ public:
   ```
 
 ---
+
+- #### [买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)：给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。你只能选择 某一天 买入这只股票，并选择在 未来的某一个不同的日子 卖出该股票。设计一个算法来计算你所能获取的最大利润。返回你可以从这笔交易中获取的最大利润。如果你不能获取任何利润，返回 0 。
+
+  我们只需要遍历价格数组一遍，记录历史最低点，然后在每一天考虑这么一个问题：如果我是在历史最低点买进的，那么我今天卖出能赚多少钱？当考虑完所有天数之时，我们就得到了最好的答案。
+
+  ```c
+  class Solution {
+  public:
+      int maxProfit(vector<int>& prices) 
+      {
+          int nMax = 0;
+          int nMini = 10000;
+          
+          for (auto price :prices)
+          {
+              nMax = max(nMax, price - nMini);          
+              nMini = min(nMini, price);
+          }
+  
+          return nMax;
+      }
+  };
+  ```
+
+
+---
+
+- #### [买卖股票的最佳时机 II](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)：给你一个整数数组 prices ，其中 prices[i] 表示某支股票第 i 天的价格。在每一天，你可以决定是否购买和/或出售股票。你在任何时候 最多 只能持有 一股 股票。你也可以先购买，然后在 同一天 出售。返回 你能获得的 最大 利润 。
+
+  动态规划求解：每天的状态可以有两种，一种是持有股票，一种是不持有。每天的状态仅和前一天相关，列出状态公式然后降维即可。
+
+  ```c
+  class Solution {
+  public:
+      int maxProfit(vector<int>& prices) 
+      {
+          int nLastBuy = 0;
+          int nLastNull = 0;
+  
+          nLastNull = 0;
+          nLastBuy = -prices[0];
+  
+          for (int i = 1; i < prices.size(); ++i)
+          {
+              int nNowNull = 0;
+              nNowNull = max(nLastNull, nLastBuy + prices[i]);
+              nLastBuy = max(nLastNull - prices[i], nLastBuy);   
+              nLastNull = nNowNull;                           
+          }
+  
+          return nLastBuy > nLastNull ? nLastBuy : nLastNull;
+      }
+  };
+  ```
+
+---
+
+- #### [买卖股票的最佳时机 III](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/)：给定一个数组，它的第 `i` 个元素是一支给定的股票在第 `i` 天的价格。设计一个算法来计算你所能获取的最大利润。你最多可以完成 **两笔** 交易。
+
+  `f[i][j][k]`表示第i天，进行了j次交易，当前状态为k时的最大利润。k=0表示没有持有股票，k=1表示持有股票。
+
+  ```c
+  class Solution {
+  public:
+   int maxProfit(vector<int> &prices)
+      {
+          const int inf = 1 << 30;
+          const int n = prices.size();
+          int f[30000 + 5][3][2];
+          for (int i = 0; i <= n; i++)
+          {
+              f[i][0][0] = 0;
+              f[i][0][1] = -inf;
+          }
+          for (int i = 1; i <= 2; i++)
+          {
+              f[0][i][0] = -inf;
+              f[0][i][1] = -inf;
+          }
+          for (int i = 1; i <= n; i++)
+          {
+              for (int j = 0; j <= 2; j++)
+              {
+                  f[i][j][0] = max(f[i - 1][j][1] + prices[i - 1], f[i - 1][j][0]);
+                  if (j)
+                  {
+                      f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - prices[i - 1]);
+                  }
+              }
+          }
+          return max(max(f[n][0][0], f[n][1][0]), f[n][2][0]);
+      }
+  };
+  ```
+
+---
+
+- #### [ 最长连续序列](https://leetcode.cn/problems/longest-consecutive-sequence/)：给定一个未排序的整数数组 `nums` ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+
+  用一个set存储目前找到的数字，如果发现该数字为右边界（左侧没统计到），则遍历并存储长度。
+
+  ```c
+  class Solution {
+  public:
+      int longestConsecutive(vector<int>& nums)
+      {
+          if(nums.size()<2)
+              return nums.size();
+          unordered_set<int> s(nums.begin(),nums.end());
+          int res=1;
+          for(int num : s)
+          {
+              // 剪枝：若 num - 1 存在于hashset之中，那么num位于该段连续子序列的中间位置，
+              // 只有num位于这段子序列的左边界时，才能一次就统计到这段子序列的长度，避免多次统计该段子序列的子子序列
+              if(s.count(num - 1) != 0)
+                  continue;
+              int len=1;
+              while(s.count(num+1)!=0)
+              {
+                  len++;
+                  num++;
+              }
+              res = max(res,len);
+          }
+          return res;
+      }
+  };
+  ```
+
+  
+
+----
 
 ### 四. 数组操作
 
