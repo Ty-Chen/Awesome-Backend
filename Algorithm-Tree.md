@@ -349,6 +349,45 @@
 
 ---
 
+- #### [二叉树中的最大路径和](https://leetcode.cn/problems/binary-tree-maximum-path-sum/)：路径 被定义为一条从树中任意节点出发，沿父节点-子节点连接，达到任意节点的序列。同一个节点在一条路径序列中 至多出现一次 。该路径 至少包含一个 节点，且不一定经过根节点。路径和 是路径中各节点值的总和。给你一个二叉树的根节点 root ，返回其 最大路径和 。
+
+  本题的关键在于将寻找路径转化为寻找每个节点对应的最大“贡献值”：节点值与其子节点中的最大贡献值之和（对于叶节点而言，最大贡献值等于节点值）。由此就可以很轻松的用递归解决。
+
+  ```c
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+   class Solution 
+   {
+      public:
+      int maxPathSum(TreeNode* root, int &val)
+      {
+          if (root == nullptr) return 0;
+          int left = maxPathSum(root->left, val);
+          int right = maxPathSum(root->right, val);
+          int lmr = root->val + max(0, left) + max(0, right);
+          int ret = root->val + max(0, max(left, right));
+          val = max(val, lmr);
+          return ret;
+      }
+  
+      int maxPathSum(TreeNode* root) 
+      {
+          int val = INT_MIN;
+          maxPathSum(root, val);
+          return val;
+      } 
+   };
+  ```
+
+---
+
 
 
 -----
@@ -368,4 +407,3 @@
 
 ---
 
-## 
