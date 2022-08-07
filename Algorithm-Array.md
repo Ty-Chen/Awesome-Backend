@@ -2000,6 +2000,44 @@ public:
   };
   ```
 
+---
+
+- #### [加油站](https://leetcode.cn/problems/gas-station/)：在一条环路上有 n 个加油站，其中第 i 个加油站有汽油 gas[i] 升。你有一辆油箱容量无限的的汽车，从第 i 个加油站开往第 i+1 个加油站需要消耗汽油 cost[i] 升。你从其中的一个加油站出发，开始时油箱为空。给定两个整数数组 gas 和 cost ，如果你可以绕环路行驶一周，则返回出发时加油站的编号，否则返回 -1 。如果存在解，则 保证 它是 唯一 的。
+
+  初始化 total_tank 和 curr_tank 为 0 ，并且选择 0 号加油站为起点。
+  遍历所有的加油站：
+  a. 每一步中，都通过加上 gas[i] 和减去 cost[i] 来更新 total_tank 和 curr_tank 。
+  b. 如果在 i + 1 号加油站， curr_tank < 0 ，将 i + 1 号加油站作为新的起点，同时重置 curr_tank = 0 ，让油箱也清空。
+  如果 total_tank < 0 ，返回 -1 ，否则返回 starting station。
+
+  ```c
+  class Solution {
+    public:
+    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) 
+    {
+      int n = gas.size();
+  
+      int total_tank = 0;
+      int curr_tank = 0;
+      int starting_station = 0;
+      for (int i = 0; i < n; ++i) 
+      {
+        total_tank += gas[i] - cost[i];
+        curr_tank += gas[i] - cost[i];
+        // If one couldn't get here,
+        if (curr_tank < 0) 
+        {
+          // Pick up the next station as the starting one.
+          starting_station = i + 1;
+          // Start with an empty tank.
+          curr_tank = 0;
+        }
+      }
+      return total_tank >= 0 ? starting_station : -1;
+    }
+  };
+  ```
+
   
 
 ----
