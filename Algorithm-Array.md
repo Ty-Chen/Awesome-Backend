@@ -52,7 +52,7 @@
 
 * #### [盛水最多的容器](https://leetcode.cn/problems/container-with-most-water/solution/)：给定 n 个非负整数 a1，a2，…，an，每个数代表坐标中的一个点 (i, ai) 。在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。（leet code 11)
 
-  形成的区域受限制于较短的那条，同时距离越远则可能的收益越大。因此我们从最左和最右开始检索，采用双指针法，移动较短的那端。
+  形成的区域受限制于较短的那条，同时距离越远则可能的收益越大。因此我们从最左和最右开始检索，采用双指针法，移动较短的那端。背后隐含一个数学前提：移动较短的那根一定是正确的，因为若移动较长那根一定不能得到大于原本两根更大的面积（可证明）。
 
   ```cpp
    int maxArea(vector<int> &height)
@@ -92,7 +92,7 @@
 
 * #### 接雨水：给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。(leet code 42)
 
-  遇到这种一般最优解都是双指针首尾滑动，主要难点在于设计怎么计算。这题的核心思想在于：左边比右边高则从右边开始算格子，右边比左边高则从左边开始算格子
+  遇到这种一般最优解都是双指针首尾滑动，主要难点在于设计怎么计算。这题的核心思想在于短板效应：左边比右边高则从右边开始算格子并移动右指针，右边比左边高则从左边开始算格子并移动左指针。同时需要记录左右两边最大值和当前值以实现算。
 
   ```cpp
   class Solution {
@@ -2035,6 +2035,82 @@ public:
       }
       return total_tank >= 0 ? starting_station : -1;
     }
+  };
+  ```
+
+---
+
+- #### [分发糖果](https://leetcode.cn/problems/candy/)：n 个孩子站成一排。给你一个整数数组 ratings 表示每个孩子的评分。你需要按照以下要求，给这些孩子分发糖果：每个孩子至少分配到 1 个糖果。相邻两个孩子评分更高的孩子会获得更多的糖果。请你给每个孩子分发糖果，计算并返回需要准备的 最少糖果数目 。
+
+  本题有两种解法：
+
+  - 解法一是和接雨水类似，考虑从左到右的增关系，再考虑从右到左的增关系，如果比左边大则至少要多少个，如果比右边大则至少要多少个。然后将二者取最大数，则每个人拿到的糖果均可以满足要求。
+  - 解法二是遍历一遍：如果递增则++，如果出现递减，记录递减序列长度，每次递减多一个，则需要给递减序列每个人++，以此累计总数。注意这里用了一个nLastInc的值，这个值的意义在于：如果递减出现断层，当填补上断层后，最高峰的这个值也是要跟着加的。
+
+  ```c
+  // 解法一
+  class Solution {
+  public:
+      int candy(vector<int>& ratings) 
+      {
+          int nRet = 0;
+          int nSize = ratings.size();
+          int nRight = 0;
+          vector<int> leftVec(nSize, 1);
+  
+          for (int i = 1; i < nSize; ++i)
+          {
+              if (ratings[i] > ratings[i - 1])
+              {
+                  leftVec[i] = leftVec[i - 1] + 1;
+              }
+          }
+  
+          for (int i = nSize - 1; i >= 0; --i)
+          {
+              if ((i != nSize - 1) && ratings[i] > ratings[i + 1])
+              {
+                  nRight++;
+              }
+              else
+              {
+                  nRight = 1;
+              }
+              nRet += max(leftVec[i], nRight);
+          }
+  
+          return nRet;
+      }
+  };
+  
+  // 解法二
+  class Solution {
+  public:
+      int candy(vector<int>& ratings) 
+      {
+          //nPrev表示上一个值，nDecLen表示递减队列长度（不包括第一个值，它属于递增队列），nLastInc记录递增队列尾巴的值
+          int nRet = 1, nPre = 1, nDecLen = 0, nLastInc = 1;
+  
+          for (int i = 1; i < ratings.size(); ++i)
+          {
+              if (ratings[i] >= ratings[i - 1])
+              {
+                  nPre = ratings[i] == ratings[i - 1] ? 1 : nPre + 1;
+                  nRet += nPre;
+                  nDecLen = 0;
+                  nLastInc = nPre;
+              }
+              else
+              {
+                  nDecLen++;
+                  if (nDecLen == nLastInc) nDecLen++;
+                  nRet += nDecLen;
+                  nPre = 1;
+              }
+          }
+  
+          return nRet;
+      }
   };
   ```
 
