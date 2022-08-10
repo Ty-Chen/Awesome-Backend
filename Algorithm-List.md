@@ -585,7 +585,84 @@ public:
   };
   ```
 
+
+---
+
+- #### [环形链表](https://leetcode.cn/problems/linked-list-cycle/)：给你一个链表的头节点 `head` ，判断链表中是否有环。
+
+  快慢指针的典型应用
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      bool hasCycle(ListNode *head) 
+      {
+          ListNode* pSlow = head, *pFast = head;
+          while (pSlow && pFast)
+          {
+              pSlow = pSlow->next;
+              pFast = pFast->next;
+              if (pFast) pFast = pFast->next;
+              if (pSlow && pFast && pSlow == pFast) return true;           
+          }
   
+          return false;
+      }
+  };
+  ```
+
+---
+
+- #### [环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/)：给定一个链表的头节点  `head` ，返回链表开始入环的第一个节点。 *如果链表无环，则返回 `null`。*
+
+  和上一题略有不同，需要返回节点，设链表中环外部分的长度为 `a`。慢指针进入环后，又走了 b 的距离与快指针相遇。此时，快指针已经走完了环的 n 圈，则它走过的总距离为 `a+n(b+c)+b=a+(n+1)b+nc`，又因为快指针走了慢指针两倍距离，所以`a+(n+1)b+nc=2(a+b)`，即*a*=*c*+(*n*−1)(*b*+*c*)。由此，我们令快慢指针相遇后，慢指针指向头节点，快慢指针每次移动一位，则相遇点必定为环的起始位置（一端走了a另一端一定走了n-1圈+c）
+
+  ```c
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode(int x) : val(x), next(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      ListNode *detectCycle(ListNode *head) {
+          ListNode *sptr = head, *fptr = head;
+          while (fptr != NULL && fptr->next != NULL)
+          {
+              sptr = sptr->next;
+              fptr = fptr->next->next;
+  
+              if (sptr == fptr)
+              {
+                  sptr = head;
+                  while (fptr != sptr)
+                  {
+                      fptr = fptr->next;
+                      sptr = sptr->next;
+                  }
+  
+                  return sptr;
+              } 
+          }
+          return NULL;
+      }
+  };
+  ```
+
+---
+
+
 
 ---
 
