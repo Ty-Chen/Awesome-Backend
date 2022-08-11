@@ -211,7 +211,6 @@
   };
   ```
 
-  
 
 -----
 
@@ -302,7 +301,6 @@
   
   ```
 
-  
 
 ---
 
@@ -388,7 +386,47 @@
 
 ---
 
+- #### [从二叉搜索树到更大和树](https://leetcode.cn/problems/binary-search-tree-to-greater-sum-tree/)：给定一个二叉搜索树 `root` (BST)，请将它的每个节点的值替换成树中大于或者等于该节点值的所有节点值之和。
 
+  本题做法很简单：逆序的中序遍历即是从大到小的遍历，可以满足题意
+
+  ```c
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+   *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+   *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+   * };
+   */
+  class Solution 
+  {
+      int nTotal;
+  public:
+      TreeNode* bstToGst(TreeNode* root) 
+      {
+          nTotal = 0;
+          ChangeVal(root);
+          return root;
+      }
+  
+  private:
+      void ChangeVal(TreeNode* pNode)
+      {
+          if (pNode == NULL) return;
+  
+          ChangeVal(pNode->right);
+  
+          pNode->val += nTotal;
+          nTotal = pNode->val;
+  
+          ChangeVal(pNode->left);
+      }
+  };
+  ```
 
 -----
 
