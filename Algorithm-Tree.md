@@ -7,24 +7,26 @@
   遍历包括前序中序后续，都很简单。写法包括递归和栈，如下所示
 
   ```cpp
-  //前序遍历是中左右，推右儿子入栈，打印当前值，访问左儿子
-  vector<int> preorderTraversal(TreeNode* root) 
+  //前序遍历是中左右，打印当前值，推右儿子入栈，访问左儿子
+      vector<int> preorderTraversal(TreeNode* root) 
       {
-          stack<TreeNode*> S;
-          vector<int> v;
-          TreeNode* rt = root;
-          while(rt || S.size())
+          TreeNode* pNode = root;
+          stack<TreeNode*> NodeStack;
+  
+          while (pNode || NodeStack.size())
           {
-              while(rt)
+              while (pNode)
               {
-                  S.push(rt->right);
-                  v.push_back(rt->val);
-                  rt=rt->left;
+                  ret.push_back(pNode->val);
+                  NodeStack.push(pNode->right);
+                  pNode = pNode->left;
               }
-              rt=S.top();
-              S.pop();
+  
+              pNode = NodeStack.top();
+              NodeStack.pop();
           }
-          return v;        
+  
+          return ret;
       }
   
   
@@ -32,43 +34,53 @@
   // 所以推左儿子入栈，记录当前值，访问右儿子
       vector<int> postorderTraversal(TreeNode* root) 
       {
-          stack<TreeNode*> S;
-          vector<int> v;
-          TreeNode* rt = root;
-          while(rt || S.size())
+          vector<int> ret;
+          stack<TreeNode*> NodeStack;
+          TreeNode* pNode = root;
+  
+          while (pNode || NodeStack.size())
           {
-              while(rt)
+              while (pNode)
               {
-                  S.push(rt->left);
-                  v.push_back(rt->val);
-                  rt=rt->right;
+                  ret.push_back(pNode->val);
+                  NodeStack.push(pNode->left);
+                  pNode = pNode->right;
               }
-              rt=S.top();
-              S.pop();
+  
+              pNode = NodeStack.top();
+              NodeStack.pop();
           }
-          reverse(v.begin(),v.end());
-          return v;
+  
+          reverse(ret.begin(), ret.end());
+          return ret;
       }
   
-  // 中序遍历是左中右，推左儿子入栈直到最后，打印当前值，访问右儿子
+  // 中序遍历是左中右，推当前节点入栈，向左儿子推进直到最后，打印当前值，访问右儿子
       vector<int> inorderTraversal(TreeNode* root) 
       {
-          stack<TreeNode*> S;
-          vector<int> v;
-          TreeNode* rt = root;
-          while(rt || S.size())
+          vector<int> ret;
+          stack<TreeNode*> NodeStack;
+          TreeNode* pNode = root;     
+  
+          while (pNode || NodeStack.size())
           {
-              while(rt)
+              while (pNode)
               {
-                  S.push(rt);
-                  rt=rt->left;
+                  NodeStack.push(pNode);
+                  pNode = pNode->left;
               }
-              rt=S.top();
-              S.pop();
-              v.push_back(rt->val);
-            rt=rt->right;
-          }
-          return v;        
+  
+              pNode = NodeStack.top();
+              NodeStack.pop();
+  
+              if (pNode)
+              {
+                  ret.push_back(pNode->val); 
+                  pNode = pNode->right;  
+              }    
+          }       
+  
+          return ret; 
       }
   
   /**
