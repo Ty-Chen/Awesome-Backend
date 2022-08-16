@@ -2118,10 +2118,29 @@ public:
 
 - #### [乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)：给你一个整数数组 `nums` ，请你找出数组中乘积最大的非空连续子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
 
-  **本题重点在于需要维护一个Min和一个max，因为负数的乘法很可能使得最大最小瞬间颠倒，采取动态规划思想遍历一遍即可**
+  本题重点在于需要维护一个Min和一个max，因为负数的乘法很可能使得最大最小瞬间颠倒，采取动态规划思想遍历一遍即可。这里动态规划主要是：遍历到i个时，其最大值可能是前面
 
   ```c
+  class Solution {
+  public:
+      int maxProduct(vector<int>& nums) 
+      {
+          int nRet = nums[0];
+          int nMin = nums[0];
+          int nMax = nums[0];
   
+          for (int i = 1; i < nums.size(); ++i)
+          {
+              int tmp = nMax;
+              nMax = max(max(nMax * nums[i], nums[i]), nMin * nums[i]);
+              nMin = min(min(nMin * nums[i], nums[i]), tmp * nums[i]);
+  
+              nRet = max(nRet, nMax);
+          }
+  
+          return nRet;
+      }
+  };
   ```
 
 ----
