@@ -662,7 +662,26 @@ public:
 
 ---
 
+- #### [相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/)：给你两个单链表的头节点 `headA` 和 `headB` ，请你找出并返回两个单链表相交的起始节点。如果两个链表不存在相交节点，返回 `null` 。
 
+  本题的思路主要是用两个指针分别指向A/B首部，以同样速度向后滑动，滑到尾部后指向另一个链表再次滑动。如果二者相交且不为NULL则说明有交点，否则说明不相交。数学思路主要是：ptrA走了a独有的+公共部分+b独有的，而ptrB走了b独有的+公共部分+a独有的，速度相同路程相同必定相交。如果交点为NULL说明公共部分为0
+
+  ````c
+  class Solution {
+  public:
+      ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+          ListNode *ptrA = headA, *ptrB = headB;
+          while (ptrA != ptrB)
+          {
+              ptrA = ptrA ? ptrA->next: headB;
+              ptrB = ptrB ? ptrB->next: headA;
+          }
+          return ptrA;      
+      }
+  };
+  ````
+
+  
 
 ---
 
