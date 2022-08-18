@@ -2145,6 +2145,37 @@ public:
 
 ----
 
+- #### [寻找峰值](https://leetcode.cn/problems/find-peak-element/)：峰值元素是指其值严格大于左右相邻值的元素。给你一个整数数组 nums，找到峰值元素并返回其索引。数组可能包含多个峰值，在这种情况下，返回 任何一个峰值 所在位置即可。你可以假设 nums[-1] = nums[n] = -∞ 。你必须实现时间复杂度为 O(log n) 的算法来解决此问题
+
+  本题最关键的条件时假设了两边边界是负无穷大，同时如果我们从一个位置开始，不断地向高处走，那么最终一定可以到达一个峰值位置。如果 `nums[i] < nums[i + 1]`则`i + 1`以及其右侧的位置中一定有一个峰值。因此我们可以设计出一个类似二分法的算法：每次取中间点观测与左右点的关系，如果满足则返回，否则朝着大的那边继续二分，直至最终找到解。
+
+  ```c
+  int findPeakElement(int* nums, int numsSize)
+  {
+      int left = 0;
+      int right = numsSize - 1;
+      while(left < right)
+      {
+          int mid = left + (right - left) / 2;
+          if(nums[mid] > nums[mid + 1])
+          {
+              right = mid;
+          }
+          else
+          {
+              left = mid + 1;
+          }
+      }
+      return left;
+  }
+  ```
+
+---
+
+
+
+---
+
 ### 四. 数组操作
 
 数组操作通常会进行反转、部分的增删或者替换等，通常较为简单，但是需要注意边界条件。除此之外还有一类数组映射题，这一类一般BFS或DFS处理。
