@@ -960,6 +960,61 @@ public:
 
 ---
 
+- #### [最长字符串链](https://leetcode.cn/problems/longest-string-chain/)：给出一个单词数组 words ，其中每个单词都由小写英文字母组成。如果我们可以 不改变其他字符的顺序 ，在 wordA 的任何地方添加 恰好一个 字母使其变成 wordB ，那么我们认为 wordA 是 wordB 的 前身 。从给定单词列表 words 中选择单词组成词链，返回 词链的 最长可能长度 。
+
+  本题思路很简单：动态规划去判断每一个位置和前面所有位置的关系。注意点有3：1. 注意需要先排序；2. 注意需要写辅助函数；3. 辅助函数必须用引用
+
+  ````c
+  class Solution {
+  public:
+      int longestStrChain(vector<string>& words) 
+      {
+          int nMax = 1;
+          int nSize = words.size();
+  
+          sort(words.begin(), words.end(), [](const string &s1, const string &s2) {return s1.size() < s2.size();});
+  
+          vector<int> dp(nSize, 1);
+  
+          for (int i = 1; i < nSize; ++i)
+          {
+              for (int j = 0; j < i; ++j)
+              {
+                  if (isBefore(words[i], words[j]))
+                  {
+                      dp[i] = max(dp[i], dp[j] + 1);
+                  }
+              }
+              nMax = max(nMax, dp[i]);
+          }
+  
+          return nMax;
+      }
+  
+      int isBefore(string &a, string &b)
+      {
+          if (a.size() != b.size() + 1)
+          {
+              return false;
+          }
+  
+          int j = 0;
+          for (int i = 0; j < b.size() && i < a.size(); ++i)
+          {
+              if (a[i] == b[j])
+              {
+                  ++j;
+              }
+          }
+  
+          return j == b.size();
+      }
+  
+  };
+  ````
+
+---
+
 ### 二. 回文问题
 
 * #### 最长回文子串：给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。(leetcode 5)
