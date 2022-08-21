@@ -2638,7 +2638,7 @@ class Solution {
 public:
     int coinChange(vector<int>& coins, int amount) 
     {
-        vector<int> dp(amount + 1, INT_MAX - 1);
+        vector<int> dp(amount + 1, INT_MAX - 1);	//dp[i]表示换到i需要的最少数量
         dp[0] = 0;
 
         for (auto coin : coins)
@@ -2661,19 +2661,32 @@ public:
   0-1背包存在性问题：是否存在一个子集,其和为target=sum/2,外循环nums,内循环target倒序,应用状态方程2
 
 ```c
-bool canPartition(vector<int> &nums)
-{
-    int sum = accumulate(nums.begin(), nums.end(), 0);
-    if (sum % 2 == 1)  //如果是和为奇数显然无法分成两个等和子集
-        return false;
-    int target = sum / 2; 
-    vector<int> dp(target + 1, 0); //dp[i]:是否存在子集和为i
-    dp[0] = true;   //初始化：target=0不需要选择任何元素，所以是可以实现的
-    for (int num : nums)
-        for (int i = target; i >= num; i--)
-            dp[i] = dp[i] || dp[i - num];
-    return dp[target];
-}
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) 
+    {
+        int nTarget = 0;
+
+        for (auto n : nums) nTarget += n;
+
+        if (nTarget % 2 != 0) return false;
+
+        nTarget = nTarget / 2;
+
+        vector<bool> dp(nTarget + 1, 0);	//dp[i]表示是否可以分割出和为i的子集
+        dp[0] = true;
+
+        for (auto num : nums)
+        {
+            for (int i = nTarget; i >= num; --i)
+            {
+                dp[i] = dp[i] || dp[i - num];
+            }
+        }
+
+        return dp[nTarget];
+    }
+};
 ```
 
 ---
