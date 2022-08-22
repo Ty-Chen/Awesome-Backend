@@ -2596,7 +2596,7 @@ void test_1_wei_bag_problem()
 
 ---
 
-- [最后一块石头的重量 II](https://leetcode.cn/problems/last-stone-weight-ii/)：从一堆石头中,每次拿两块重量分别为x,y的石头,若x=y,则两块石头均粉碎;若x<y,两块石头变为一块重量为y-x的石头求最后剩下石头的最小重量(若没有剩下返回0)。
+- #### [最后一块石头的重量 II](https://leetcode.cn/problems/last-stone-weight-ii/)：从一堆石头中,每次拿两块重量分别为x,y的石头,若x=y,则两块石头均粉碎;若x<y,两块石头变为一块重量为y-x的石头求最后剩下石头的最小重量(若没有剩下返回0)。
 
   问题转化为：把一堆石头分成两堆,求两堆石头重量差最小值
   进一步分析：要让差值小,两堆石头的重量都要接近sum/2;我们假设两堆分别为A,B,若A更接近sum/2,B也相应更接近sum/2
@@ -2630,7 +2630,8 @@ public:
 
 ---
 
-- [零钱兑换](https://leetcode.cn/problems/coin-change/)：给定amount,求用任意数量不同面值的零钱换到amount所用的最少数量
+- #### [零钱兑换](https://leetcode.cn/problems/coin-change/)：给定amount,求用任意数量不同面值的零钱换到amount所用的最少数量
+
   完全背包最值问题：外循环coins,内循环amount正序,应用状态方程1
 
 ```c++
@@ -2656,8 +2657,8 @@ public:
 
 ---
 
-- 分割等和子集416
-  分割等和子集：判断是否能将一个数组分割为两个子集,其和相等
+- #### [分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)：判断是否能将一个数组分割为两个子集,其和相等
+
   0-1背包存在性问题：是否存在一个子集,其和为target=sum/2,外循环nums,内循环target倒序,应用状态方程2
 
 ```c
@@ -2691,25 +2692,37 @@ public:
 
 ---
 
-目标和494
-目标和：给数组里的每个数字添加正负号得到target
-数组和sum,目标和s, 正数和x,负数和y,则x+y=sum,x-y=s,那么x=(s+sum)/2=target
-0-1背包不考虑元素顺序的组合问题:选nums里的数得到target的种数,外循环nums,内循环target倒序,应用状态方程3
+- #### [目标和](https://leetcode.cn/problems/target-sum/)：给数组里的每个数字添加正负号得到target。
+
+  数组和sum,目标和s, 正数和x,负数和y, 则`x + y = sum, x - y = s`, 那么`x = (s + sum) / 2 = target`
+  0-1背包不考虑元素顺序的组合问题:选nums里的数得到target的种数,外循环nums,内循环target倒序,应用状态方程3
 
 ```c
-int findTargetSumWays(vector<int> &nums, int s)
-{
-    int sum = accumulate(nums.begin(), nums.end(), 0);
-    if ((sum + s) % 2 != 0 || sum < s)
-        return 0;
-    int target = (sum + s) / 2;
-    vector<int> dp(target + 1);
-    dp[0] = 1;
-    for (int num : nums)
-        for (int i = target; i >= num; i--)
-            dp[i] += dp[i - num];
-    return dp[target];
-}
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) 
+    {
+        int nSum = 0;
+        for (auto n : nums) nSum += n;
+
+        if ((nSum - target) % 2 != 0 || nSum < target) return 0;
+
+        int nTarget = (nSum - target) / 2;
+        vector<int> dp(nTarget + 1, 0);
+        dp[0] = 1;
+
+        for (auto num : nums)
+        {
+            for (int i = nTarget; i >= num; --i)
+            {
+                dp[i] += dp[i - num];
+            }
+        }
+
+        return dp[nTarget];
+
+    }
+};
 ```
 
 ---
