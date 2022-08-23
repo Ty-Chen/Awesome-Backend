@@ -2727,68 +2727,85 @@ public:
 
 ---
 
-完全平方数279
-完全平方数：对于一个正整数n,找出若干个完全平方数使其和为n,返回完全平方数最少数量
+- #### [完全平方数](https://leetcode.cn/problems/perfect-squares/)：对于一个正整数n,找出若干个完全平方数使其和为n,返回完全平方数最少数量
+
 完全背包的最值问题：完全平方数最小为1,最大为sqrt(n),故题目转换为在nums=[1,2.....sqrt(n)]中选任意数平方和为target=n
 外循环nums,内循环target正序,应用转移方程1
 
 ```c
-int numSquares(int n)
-{
-    vector<int> dp(n + 1, INT_MAX); //dp[i]:和为i的完全平方数的最小数量
-    dp[0] = 0;
-    for (int num = 1; num <= sqrt(n); num++)
+class Solution {
+public:
+    int numSquares(int n) 
     {
-        for (int i = 0; i <= n; i++)
+        vector<int> dp(n + 1, INT_MAX - 1);
+        dp[0] = 0;
+
+        for (int i = 1; i <= sqrt(n); ++i)
         {
-            if (i >= num * num)
-                dp[i] = min(dp[i], dp[i - num * num] + 1);
+            for (int j = i * i; j <= n; ++j)
+            {
+                dp[j] = min(dp[j], dp[j - i * i] + 1);
+            }
         }
+
+        return dp[n];
     }
-    return dp[n];
-}
+};
 ```
 
 ---
 
-组合总和 Ⅳ377
-组合总和IV：在nums中任选一些数,和为target
-考虑顺序的组合问题：外循环target,内循环nums,应用状态方程3
+- #### [组合总和 Ⅳ](https://leetcode.cn/problems/combination-sum-iv/)：在nums中任选一些数,和为target
+
+  考虑顺序的组合问题：外循环target,内循环nums,应用状态方程3
 
 ```c
-int combinationSum4(vector<int> &nums, int target)
-{
-    vector<int> dp(target + 1);
-    dp[0] = 1;
-    for (int i = 1; i <= target; i++)
+class Solution {
+public:
+    int combinationSum4(vector<int>& nums, int target) 
     {
-        for (int num : nums)
+        vector<unsigned long long> dp(target + 1, 0);
+        
+        dp[0] = 1;
+        for (int i = 0; i <= target; ++i)
         {
-            if (num <= i) 
-                dp[i] += dp[i - num];
+            for (auto n : nums)
+            {
+                if (n <= i)
+                    dp[i] += dp[i - n];
+            }
         }
+
+        return dp[target];
     }
-    return dp[target];
-}
+};
 ```
 
 ---
 
-零钱兑换 II518
-零钱兑换2：任选硬币凑成指定金额,求组合总数
-完全背包不考虑顺序的组合问题：外循环coins,内循环target正序,应用转移方程3
+- #### [零钱兑换 II](https://leetcode.cn/problems/coin-change-2/)：任选硬币凑成指定金额,求组合总数
+
+  完全背包不考虑顺序的组合问题：外循环coins,内循环target正序,应用转移方程3
 
 ```c
-int change(int amount, vector<int> &coins)
-{
-    vector<int> dp(amount + 1);
-    dp[0] = 1;
-    for (int coin : coins)
-        for (int i = 1; i <= amount; i++)
-            if (i >= coin)
+class Solution {
+public:
+    int change(int amount, vector<int>& coins) 
+    {
+        vector<int> dp(amount + 1, 0);
+        dp[0] = 1;
+
+        for (auto coin : coins)
+        {
+            for (int i = coin; i <= amount; ++i)
+            {
                 dp[i] += dp[i - coin];
-    return dp[amount];
-}
+            }
+        }
+
+        return dp[amount];
+    }
+};
 ```
 
 ---
