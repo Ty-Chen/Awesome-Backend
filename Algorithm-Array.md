@@ -2810,22 +2810,36 @@ public:
 
 ---
 
-掷骰子的N种方法1155
-投掷骰子的方法数：d个骰子,每个有f个面(点数为1,2,...f),求骰子点数和为target的方法
-分组0/1背包的组合问题：dp[i][j]表示投掷i个骰子点数和为j的方法数;三层循环：最外层为背包d,然后先遍历target后遍历点数f
-应用二维拓展的转移方程3：dp[i][j]+=dp[i-1][j-f];
+- #### [掷骰子的N种方法](https://leetcode.cn/problems/number-of-dice-rolls-with-target-sum/)：d个骰子,每个有f个面(点数为1,2,...f),求骰子点数和为target的方法
+
+  分组0/1背包的组合问题：dp[i][j]表示投掷i个骰子点数和为j的方法数;三层循环：最外层为背包d,然后先遍历target后遍历点数f
+  应用二维拓展的转移方程3：`dp[i][j]+=dp[i-1][j-f];`
 
 ```c
-int numRollsToTarget(int d, int f, int target)
-{
-    vector<vector<int>> dp(d + 1, vector<int>(target + 1, 0));
-    dp[0][0] = 1;
-    for (int i = 1; i <= d; i++)
-        for (int j = 1; j <= target; j++)
-            for (int k = 1; k <= f && j >= k; k++)
-                dp[i][j] += dp[i - 1][j - k];
-    return dp[d][target];
-}
+class Solution {
+public:
+    int numRollsToTarget(int n, int k, int target) 
+    {
+        int mod = 1e9 + 7;
+        vector<vector<int>> dp(n + 1, vector<int>(target + 1, 0));
+
+        dp[0][0] = 1;
+
+        for (int i = 1; i <= n; ++i)
+        {
+            for (int j = 1; j <= target; ++j)
+            {
+                for (int point = 1; point <= k && point <= j; ++point)
+                {
+                    dp[i][j] += dp[i - 1][j - point];
+                    dp[i][j] = dp[i][j] % mod;
+                }
+            }
+        }
+
+        return dp[n][target];
+    }
+};
 ```
 
 ---
