@@ -1,4 +1,4 @@
-## 图
+##   图
 
 ### 1. 拓扑排序
 
@@ -70,5 +70,18 @@
 
 ### 5.并查集
 
-并查集（Union-find Sets）是一种非常精巧而实用的数据结构，它主要用于处理一些**不相交集合**的合并及查询问题。一些常见的用途有求连通子图、求最小生成树的 Kruskal 算法和求最近公共祖先（Least Common Ancestors, LCA）等。
+并查集（Union-find Sets）是一种非常精巧而实用的数据结构，它主要用于处理一些**不相交集合**的合并及查询问题。一些常见的用途有求连通子图、求冗余连接、求最小生成树的 Kruskal 算法和求最近公共祖先（Least Common Ancestors, LCA）等。
+
+```c
+    int Find(vector<int>& parent, int index) {
+        if (parent[index] != index) {
+            parent[index] = Find(parent, parent[index]);
+        }
+        return parent[index];
+    }
+
+    void Union(vector<int>& parent, int index1, int index2) {
+        parent[Find(parent, index1)] = Find(parent, index2);
+    }
+```
 
