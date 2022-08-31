@@ -72,16 +72,40 @@
 
 并查集（Union-find Sets）是一种非常精巧而实用的数据结构，它主要用于处理一些**不相交集合**的合并及查询问题。一些常见的用途有求连通子图、求冗余连接、求最小生成树的 Kruskal 算法和求最近公共祖先（Least Common Ancestors, LCA）等。
 
-```c
-    int Find(vector<int>& parent, int index) {
-        if (parent[index] != index) {
-            parent[index] = Find(parent, parent[index]);
+并查集的基本实现如下所示。其基本原理为：
+
+- 初始化一个数组，让每个节点指向自身
+- 提供Find函数，通过递归寻找其相连的根节点
+- 提供Union函数，将两个节点联合起来
+
+```c++
+class UFS
+{
+public:
+    UFS(int n) 
+    {
+        for (int i = 0; i <= n; ++i)
+        {
+            parent.push_back(i);
+        }
+    }
+    
+    int Find(int index) 
+    {
+        if (parent[index] != index) 
+        {
+            parent[index] = Find(parent[index]);
         }
         return parent[index];
     }
 
-    void Union(vector<int>& parent, int index1, int index2) {
-        parent[Find(parent, index1)] = Find(parent, index2);
-    }
+    void Union(int index1, int index2) 
+    {
+        parent[Find(index1)] = Find(index2);
+    } 
+    
+private:
+    vector<int> parent;
+};
 ```
 
