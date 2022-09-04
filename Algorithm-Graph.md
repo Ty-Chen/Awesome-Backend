@@ -109,3 +109,65 @@ private:
 };
 ```
 
+---
+
+- #### [冗余连接](https://leetcode.cn/problems/redundant-connection/)：给定往一棵 n 个节点 (节点值 1～n) 的树中添加一条边后的图。添加的边的两个顶点包含在 1 到 n 中间，且这条附加的边不属于树中已存在的边。图的信息记录于长度为 n 的二维数组 edges ，edges[i] = [ai, bi] 表示图中在 ai 和 bi 之间存在一条边。请找出一条可以删去的边，删除后可使得剩余部分是一个有着 n 个节点的树。如果有多个答案，则返回数组 edges 中最后出现的边。
+
+  并查集的典型用例，一边加入一边看是否有两个点已经是同根节点，如果是则输出。
+
+  ```c++
+  class UFS
+  {
+  public:
+      UFS(int n) 
+      {
+          for (int i = 0; i <= n; ++i)
+          {
+              parent.push_back(i);
+          }
+      }
+      
+      int Find(int index) 
+      {
+          return parent[index] == index ? index : Find(parent[index]);
+      }
+  
+      void Union(int index1, int index2) 
+      {
+          parent[Find(index1)] = Find(index2);
+      } 
+      
+  private:
+      vector<int> parent;
+  };
+  
+  class Solution 
+  {
+  public:
+      vector<int> findRedundantConnection(vector<vector<int>>& edges) 
+      {
+          UFS ufs(edges.size());
+  
+          for (auto edge : edges)
+          {
+              int node1 = edge[0], node2 = edge[1];
+  
+              if (ufs.Find(node1) != ufs.Find(node2))
+              {
+                  ufs.Union(node1, node2);
+              }
+              else
+              {
+                  return edge;
+              }
+          }
+  
+          return vector<int>{};
+      }
+  };
+  ```
+
+---
+
+
+
