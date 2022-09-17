@@ -1,6 +1,6 @@
 ## 树
 
-#### 二叉树的问题主要包括树的遍历、树的构造、二叉搜索树、根据前中或者中后序还原二叉树、二叉树构造B树等。
+二叉树的问题主要包括树的遍历、树的构造、二叉搜索树、根据前中或者中后序还原二叉树、二叉树构造B树等。
 
 * #### 二叉树遍历
 
@@ -441,6 +441,58 @@
   ```
 
 -----
+
+- #### [根到叶路径上的不足节点](https://leetcode.cn/problems/insufficient-nodes-in-root-to-leaf-paths/)：给定一棵二叉树的根 root，请你考虑它所有 从根到叶的路径：从根到任何叶的路径。（所谓一个叶子节点，就是一个没有子节点的节点）假如通过节点 node 的每种可能的 “根-叶” 路径上值的总和全都小于给定的 limit，则该节点被称之为「不足节点」，需要被删除。请你删除所有不足节点，并返回生成的二叉树的根。
+
+  后续遍历的应用
+
+  ```c
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+   *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+   *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+   * };
+   */
+  //DFS后序遍历
+  class Solution {
+  public:
+      bool issufficient(TreeNode* root, int presum, int limit){
+          //如果为空，也视为不足结点
+          if(!root) return true;
+          //如果左右孩子都为空
+          if (root->left == NULL && root->right == NULL) {
+              return presum + root->val < limit; //告诉上一层该结点是否为不足结点
+          }
+          //如果左右孩子不空
+          bool left = issufficient(root->left, presum+root->val, limit); //去判断左孩子是否是不足结点
+          bool right = issufficient(root->right, presum+root->val, limit); //判断右孩子是否是不足结点
+          
+          //如果左边是不足结点，删除左边
+          if(left) root->left=NULL;
+          //如果右边是不足结点，删除右边
+          if(right) root->right=NULL;
+  
+          //返回值为当前结点是否为不足结点:如果左右孩子都是不足结点，当前肯定也是不足结点
+          return left&&right;
+  
+      }
+      TreeNode* sufficientSubset(TreeNode* root, int limit) {
+          TreeNode* dummy = new TreeNode(0); //哑结点
+          dummy->left = root;
+          bool flag = issufficient(root, 0, limit); //检查以root为根结点的子树
+          if(flag) dummy->left=NULL; //如果root自己都不满足，那就删掉
+          return dummy->left; //如果root自己都被删了，那就相当于返回空
+      }
+  };
+  
+  ```
+
+---
 
 * #### 红黑树的特点和优点
 
