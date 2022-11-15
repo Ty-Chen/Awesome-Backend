@@ -1021,7 +1021,7 @@ public:
 
 #### 4. LCS详解
 
-
+最长公共子序列（Longest Common Subsequence），简称LCS，是典型的动态规划问题。
 
 ---
 
