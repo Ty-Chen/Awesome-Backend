@@ -770,15 +770,17 @@ class C : public B {
   ```
 	void fun()
     {
+  ```
+
  		char a[10] = {0};
-   		strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
-	}
-  	int main(int argc, char* argv[])
-	{
-		fun();
-		exit(0);
-		return 0;
-	}
+ 		strcpy(a, "abjjijjlljiojohihiihiiiiiiiiiiiiiiiiiiiiiiiiii");
+ 	}
+ 	int main(int argc, char* argv[])
+ 	{
+ 		fun();
+ 		exit(0);
+ 		return 0;
+ 	}
   ```
   
   这种情况调用完fun函数就会检测到异常了
@@ -957,7 +959,12 @@ STL相关问题
   
     为了防止申请内存的浪费，现在使用较多的有2倍与1.5倍的增长方式，而1.5倍的增长方式可以更好的实现对内存的重复利用，因为更好。
 
----
+-----
+
+* #### 迭代器失效
+	- 在做了erase/push_back等操作后，之前申请的迭代器会处于一个失效状态，后续如果再使用该迭代器，会导致访问野指针出现程序宕机等问题。
+
+-----
 
 C++ 11
 -----
